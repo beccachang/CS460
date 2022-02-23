@@ -109,13 +109,17 @@ def login():
 
 	"""
 	payload = flask.request.json
-	email = payload['email']
+	try:
+		email = payload['email']
+		given_password = payload['password']
+	except: 
+		return {"err": "malformed request. missing fields", "data": None}
 	cursor = conn.cursor()
 	# check if email is registered
 	if cursor.execute("SELECT password, first_name, last_name, email, gender, date_of_birth FROM Users WHERE email = '{0}'".format(email)):
 		data = cursor.fetchall()
 		pwd = str(data[0][0])
-		if payload['password'] == pwd:
+		if given_password == pwd:
 			user = User()
 			user.id = email
 			flask_login.login_user(user) # okay login in user
@@ -278,7 +282,7 @@ def new_album():
 # begin album list code 
 @app.route('/album/list', methods=['GET'])
 @flask_login.login_required
-def new_album():
+def list_album():
 	""" 
 	list_albums():
 
