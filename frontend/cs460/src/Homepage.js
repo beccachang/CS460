@@ -10,8 +10,11 @@ import {
 } from '@ant-design/icons';
 
 import Feed from './Feed';
+import Profile from './Profile';
 import AlbumsList from './AlbumsList';
 import FriendsList from './FriendsList';
+import UserAlbumPage from './UserAlbumPage';
+import ExternalAlbumPage from './ExternalAlbumPage';
 
 const { Header, Content, Footer, Sider } = Layout;
 const { SubMenu } = Menu;
@@ -20,23 +23,47 @@ class Homepage extends React.Component {
   state = {
     showingPage: 'home',
     collapsed: false,
+    loadedProfile: null,
+    viewingAlbum: null
   };
 
   onCollapse = collapsed => {
     this.setState({ collapsed });
   };
 
+  pageChange = newPage => {
+    this.setState({showingPage: newPage});
+  }
+
+  visitProfilePage = (account) => {
+    this.setState({
+      showingPage: 'profile', 
+      loadedProfile: account
+    });
+  }
+
+  visitAlbumPage = (album) => {
+    this.setState({
+      showingPage: 'album', 
+      viewingAlbum: album
+    });
+  }
+
+  visitExternalAlbumPage = () => {
+    this.setState({showingPage: 'externalAlbum'})
+  }
+
   render() {
-    const { collapsed, showingPage } = this.state;
+    const { collapsed, showingPage, loadedProfile, viewingAlbum } = this.state;
     return (
       <Layout style={{ minHeight: '100vh' }}>
         <Sider collapsible collapsed={collapsed} onCollapse={this.onCollapse}>
           <div className="logo" />
           <Menu theme="dark" defaultSelectedKeys={['0']} mode="inline">
-            <Menu.Item key="0" icon={<HomeOutlined />}>
+            <Menu.Item key="0" icon={<HomeOutlined />} onClick={() => this.setState({showingPage: 'home'})}>
               Home
             </Menu.Item>
-            <Menu.Item key="1" icon={<UserOutlined />}>
+            <Menu.Item key="1" icon={<UserOutlined />} >
               Profile
             </Menu.Item>
             <Menu.Item key="2" icon={<BookOutlined />} onClick={() => this.setState({showingPage: 'albums'})}>
@@ -64,8 +91,11 @@ class Homepage extends React.Component {
           <Content style={{ margin: '0 16px' }}>
             <div className="site-layout-background" style={{ padding: 24, minHeight: 360 }}>
               {showingPage === 'home' ? <Feed/> : null}
-              {showingPage === 'albums' ? <AlbumsList/> : null}
-              {showingPage === 'friends' ? <FriendsList/> : null}
+              {showingPage === 'profile' ? <Profile profile={loadedProfile} visitExternalAlbumPage={() => this.visitExternalAlbumPage()}/> : null}
+              {showingPage === 'album' ? <UserAlbumPage album={viewingAlbum}/> : null}
+              {showingPage === 'albums' ? <AlbumsList viewAlbum={album => this.visitAlbumPage(album)}/> : null}
+              {showingPage === 'friends' ? <FriendsList viewProfile={account => this.visitProfilePage(account)}/> : null}
+              {showingPage === 'externalAlbum' ? <ExternalAlbumPage /> : null}
             </div>
           </Content>
           <Footer style={{ textAlign: 'center' }}>CS460 Project :)</Footer>

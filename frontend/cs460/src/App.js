@@ -1,36 +1,54 @@
-import logo from './logo.svg';
+import React from 'react';
 import './App.css';
-import { Layout, Menu, Breadcrumb } from 'antd';
 import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Link
-} from "react-router-dom";
+  Redirect
+} from 'react-router-dom';
 
 import Homepage from './Homepage';
 import Loginpage from './Login';
 
-function App() {
-  var isLoggedIn = true;
-
-  const login = function () {
-    isLoggedIn = true;
+class App extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      isLoggedIn: true,
+    };
   }
 
-  return (
-    <Router>
-      <div>
-      <Routes>
-        <Route path="/" element={<Loginpage />}/>
-        <Route 
-          path="/home"
-          element={isLoggedIn ? <Homepage/> : <Loginpage/>}
-        />
-      </Routes>
-      </div>
-    </Router>
-  );
+  login = () => {
+      this.setState({isLoggedIn: true}, function() {
+        window.history.pushState(null, "New Page Title", "/home");
+        window.location.reload();
+      });
+      
+  }
+
+  render() {
+    const { isLoggedIn } = this.state;
+
+    return (
+        <Router>
+          <div>
+          <Routes>
+            <Route path="/" element={<Loginpage loggedIn={isLoggedIn} login={() => this.login()}/>}/>
+            {isLoggedIn ? 
+              <Route 
+                path="/home"
+                element={<Homepage/>}
+              /> : null}
+            {!isLoggedIn ? 
+              <Route 
+                path="/home"
+                element={<Loginpage/>}
+              /> : null}
+          </Routes>
+          </div>
+        </Router>
+      );
+  }
 }
 
 export default App;
