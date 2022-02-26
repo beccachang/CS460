@@ -9,6 +9,7 @@
 # see links for further understanding
 ###################################################
 
+from turtle import home
 import flask
 from flask import Flask, Response, request, render_template, redirect, url_for
 from flaskext.mysql import MySQL
@@ -95,7 +96,7 @@ def login():
 	response: 
 		{
 			err: None 
-			data: {
+			profile: {
 				"first_name": string 
 				"last_name": string 
 				"email": string 
@@ -105,7 +106,7 @@ def login():
 		}
 	errs: 
 	
-	invalid creds err: { err: invalid credentials, data: None }
+	invalid creds err: { err: invalid credentials, profile: None }
 
 	"""
 	payload = flask.request.json
@@ -113,10 +114,10 @@ def login():
 		email = payload['email']
 		given_password = payload['password']
 	except: 
-		return {"err": "malformed request. missing fields", "data": None}
+		return {"err": "malformed request. missing fields", "profile": None}
 	cursor = conn.cursor()
 	# check if email is registered
-	if cursor.execute("SELECT password, first_name, last_name, email, gender, date_of_birth FROM Users WHERE email = '{0}'".format(email)):
+	if cursor.execute("SELECT password, first_name, last_name, email, gender, hometown, date_of_birth FROM Users WHERE email = '{0}'".format(email)):
 		data = cursor.fetchall()
 		pwd = str(data[0][0])
 		if given_password == pwd:
@@ -126,16 +127,17 @@ def login():
 			# return a dictionary with info about the user 
 			return {
 				"err": None, 
-				"data": {
+				"profile": {
 					"first_name": str(data[1][0]), 
 					"last_name": str(data[2][0]), 
 					"email": str(data[3][0]),
 					"gender": str(data[4][0]),
-					"date_of_birth": data[5][0]
+					"hometown": str(data[5][0]),
+					"date_of_birth": data[6][0]
 				}
 			}
 	# information did not match
-	return {"err": "invalid credentials", "data": None}
+	return {"err": "invalid credentials", "profile": None}
 
 @app.route('/logout')
 def logout():
@@ -159,13 +161,14 @@ def register_user():
 			"email": string 
 			"gender": string 
 			"date_of_birth": timestamp 
+			"hometown": string
 			"password": string 
 		}
 	
 	response: 
 		{
 			err: None 
-			data: {
+			profile: {
 				"first_name": string 
 				"last_name": string 
 				"email": string 
@@ -179,13 +182,13 @@ def register_user():
 	missing fields err:
 		{
 			err: malformed request. missing fields 
-			data: None 
+			profile: None 
 		}
 
 	OR unique email err: 
 		{
 			err: account with that email already exists 
-			data: None
+			profile: None
 		}
 	"""
 	payload = flask.request.json 
@@ -195,14 +198,15 @@ def register_user():
 		email = payload["email"]
 		gender = payload["gender"]
 		date_of_birth = payload["date_of_birth"]
+		hometown = payload["hometown"]
 		password = payload["password"]
 	except:
 		print("couldn't find all tokens") #this prints to shell, end users will not see this (all print statements go to shell)
-		return {"err": "missing fields", "message": None}
+		return {"err": "missing fields", "profile": None}
 	cursor = conn.cursor()
 	test = isEmailUnique(email)
 	if test:
-		print(cursor.execute("INSERT INTO Users (first_name, last_name, email, gender, date_of_birth, password) VALUES ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}')".format(first_name, last_name, email, gender, date_of_birth, password)))
+		print(cursor.execute("INSERT INTO Users (first_name, last_name, email, gender, hometown, date_of_birth, password) VALUES ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}')".format(first_name, last_name, email, gender, hometown, date_of_birth, password)))
 		conn.commit()
 		#log user in
 		user = User()
@@ -210,17 +214,19 @@ def register_user():
 		flask_login.login_user(user)
 		return {
 			"err": None, 
-			"data": {
+			"profile": {
 				"first_name": first_name, 
 				"last_name": last_name, 
 				"email": email,
+				"hometown": hometown,
 				"gender": gender, 
 				"date_of_birth": date_of_birth
 			}
 		}
 	else:
 		print("the email was not unique")
-		return {"err": "Account with that email already exists", "data": None}
+		return {"err": "Account with that email already exists", "profile": None}
+
 
 def getAlbumsPhotos(album_id):
 	cursor = conn.cursor()
@@ -241,6 +247,47 @@ def isEmailUnique(email):
 	else:
 		return True
 #end login code
+
+
+
+# begin get profile code 
+@app.route("/profile/<int: user_id>", methods=['GET'])
+@flask_login.login_required 
+def get_profile(user_id):
+	"""
+	get_profile():
+
+	Response: 
+	{ 
+		userId: STRING,
+		firstName: STRING,
+		lastName: STRING, 
+		albums: [
+			{
+				albumName: STRING
+				creationDate: IDK what data type but will be converted into (‘mm/dd/yyyy’) in FE if not already in that form
+			}	
+		]
+	}
+	"""
+	uid = user_id
+	cursor = conn.cursor()
+	# user info 
+	cursor.execute("SELECT user_id, first_name, last_name FROM Users WHERE user_id = '{0}'").format(uid)
+	user_info = cursor.fetchone()
+
+	# albums for the user 
+	cursor.execute("SELECT name, date_of_creation FROM Album WHERE user_id = '{0}'".format(uid))
+	user_albums = [] 
+	for tup in cursor.fetchall():
+		user_albums.append(
+			{
+				"albumName": str(tup[0]),
+				"creationDate": tup[1]
+			}
+		)
+	
+	return {"userId": user_info[0][0], "firstName": user_info[0][1], "lastName": user_info[0][2], "albums": user_albums}
 
 #begin album creation code 
 
@@ -280,22 +327,38 @@ def new_album():
 
 
 # begin album list code 
-@app.route('/album/list', methods=['GET'])
+@app.route('/albums/<int: album_id>', methods=['GET'])
 @flask_login.login_required
-def list_album():
+def list_album(album_id):
 	""" 
 	list_albums():
 
-	response: 
-		{
-			"err": None, 
-			"data": [(album_id, first_name, last_name, date_of_creation)]
-		}
+	{
+		photos: [
+			{
+				photoId: STRING,
+				caption: STRING,
+				data: the picture in binary,
+				likes: INTEGER 
+			}, 
+			...
+		]
+	}
 	"""
-	uid = getUserIdFromEmail(flask_login.current_user.id)
-	cursor = conn.cursor()
-	cursor.execute("SELECT (album_id, first_name, last_name, date_of_creation) FROM Album WHERE user_id = '{0}'".format(uid))
-	return {"err": None, "data": cursor.fetchall()}
+	# NOTE: GOING TO HAVE TO ADD likes
+	album_photos = getAlbumsPhotos(album_id)
+	album_res = [] 
+	# caption, photo_id, data
+	for tup in album_photos: 
+		album_res.append(
+			{
+				"photoId": tup[1],
+				"caption": str(tup[0]), 
+				"data": tup[2]
+				# likes must be added here 
+			}
+		)
+	return {"err": None, "photos": album_photos}
 # end of album list code 
 
 
@@ -305,23 +368,33 @@ ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
-@app.route('/photo/upload', methods=['POST'])
+@app.route('/newPhoto', methods=['POST'])
 @flask_login.login_required
 def upload_file():
 	""" 
 	upload_file(): 
 
 	payload: 
-		{
-			"caption": string 
-			"album_id": int 
-			"photo": blob
-		}
-	
+	{
+		albumId: STRING,
+		photoId: STRING,
+		caption: STRING,
+		data: the picture in binary,
+		Tags: [tag,] list of strings   
+	}
+
 	response: 
 		{
 			err: None 
-			data: [(caption, photo_id, data)]
+			photos: [
+				{
+					photoId: STRING,
+					caption: STRING,
+					data: the picture in binary,
+					likes: INTEGER 
+				}, 
+				...
+			]
 		}
 	
 	errors: {"err": "malformed request. missing fields", "data": None}
@@ -330,14 +403,28 @@ def upload_file():
 	try:
 		caption = payload["caption"]
 		album_id = payload["album_id"]
-		imgfile = request.files['photo']
+		photo_data = payload["data"]
+		tags = payload["Tags"]
 	except: 
 		return {"err": "malformed request. missing fields", "data": None}
-	photo_data =imgfile.read()
 	cursor = conn.cursor()
 	cursor.execute('''INSERT INTO Photo (caption, album_id, data) VALUES (%s, %s, %s )''' ,(caption, album_id, photo_data))
 	conn.commit()
-	return {"err": None, "data": getAlbumsPhotos(album_id)} 
+	
+	# NOTE: GOING TO HAVE TO ADD likes
+	album_photos = getAlbumsPhotos(album_id)
+	album_res = [] 
+	# caption, photo_id, data
+	for tup in album_photos: 
+		album_res.append(
+			{
+				"photoId": tup[1],
+				"caption": str(tup[0]), 
+				"data": tup[2]
+				# likes must be added here 
+			}
+		)
+	return {"err": None, "photos": album_photos}
 #end photo uploading code
 
 #begin photo list for specific album code 
@@ -367,7 +454,7 @@ def list_photos():
 
 
 # begin add friend code 
-@app.route('/friend/add', methods=['POST'])
+@app.route('/addFriend', methods=['POST'])
 @flask_login.login_required
 def add_friend():
 	"""
@@ -375,7 +462,8 @@ def add_friend():
 
 	payload: 
 		{
-			"friend_id": int 
+			userId: STRING,
+			friendUserId: STRING
 		}
 	
 	response: 
@@ -388,22 +476,22 @@ def add_friend():
 	"""
 	payload = request.json 
 	try: 
-		friend_id = payload["friend_id"]
+		user_id = payload["userId"]
+		friend_id = payload["friendUserId"]
 	except:
 		print("missing params")
 		return {"err": "malformed request. missing fields", "data": None}
 
-	uid = getUserIdFromEmail(flask_login.current_user.id)
 	cursor = conn.cursor()
-	cursor.execute('''INSERT INTO Friends_With (uid, friend_id) VALUES (%s, %s, %s )''' ,(uid, friend_id))
+	cursor.execute('''INSERT INTO Friends_With (uid, friend_id) VALUES (%s, %s)''' ,(user_id, friend_id))
 	conn.commit()
 	return { "err": None, "data": "Successfully added new friend"}
 # end add friend code 
 
 # begin list friend code 
-@app.route('/friend/list', methods=['GET'])
+@app.route('/friends/<int:user_id>', methods=['GET'])
 @flask_login.login_required
-def list_friends():
+def list_friends(user_id):
 	"""
 	list_friends():
 	
@@ -413,12 +501,120 @@ def list_friends():
 			data: [(first_name, last_name, gender, email)]
 		}
 	"""	
-	uid = getUserIdFromEmail(flask_login.current_user.id)
+	uid = user_id
 	cursor = conn.cursor()
-	cursor.execute("SELECT (first_name, last_name, gender, email) FROM Users WHERE user_id IN (SELECT (friend_id) FROM FRIENDS_WITH WHERE user_id = '{0}')".format(uid))
-	return {"err": None, "data": cursor.fetchall()}
+	cursor.execute("SELECT (user_id, first_name, last_name) FROM Users WHERE user_id IN (SELECT (friend_id) FROM FRIENDS_WITH WHERE user_id = '{0}')".format(uid))
+	# the current friends 
+	friend_list = []
+	for tup in cursor.fetchall():
+		friend_list.append(
+			{
+				"userId": int(tup[0]),
+				"firstName": str(tup[1]),
+				"lastName": str(tup[2])
+			}
+		)
+	# now get suggested friends 
+	cursor = conn.cursor()
+
+	friends_of_friends_query = """
+								SELECT (user_id, first_name, last_name) FROM (
+									SELECT * FROM Users WHERE user_id IN (
+										SELECT friend_two_id FROM Friends_With WHERE friend_one_id = '{0}'
+									)
+								)
+								""".format(uid)
+	cursor.execute(friends_of_friends_query)
+	rec_list = [] 
+	for tup in cursor.fetchall():
+		rec_list.append(
+			{
+				"userId": int(tup[0]),
+				"firstName": str(tup[1]),
+				"lastName": str(tup[2])
+			}
+		)
+	return {"err": None, "friends": friend_list, "suggestedFriends": rec_list }
 # end list friend code 
 
+
+# function to get all comments 
+def get_all_photo_comments(photo_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT (user_id, timestamp, text) FROM Comment WHERE photo_id = '{0}'".format(photo_id)) 
+
+	photo_comments = []
+	comments = cursor.fetchall()
+	for tup in comments: 
+		photo_comments.append(
+			{
+				"userId": tup[0],
+				"timestamp": tup[1],
+				"text": str(tup[2])
+			}
+		)
+	return photo_comments
+
+# begin add comment code 
+
+@app.route('/newComment', methods=['POST'])
+@flask_login.login_required 
+def new_comment():
+	"""
+	POST: /newComment
+
+	Payload:
+		{
+			photoId: STRING,
+			userId: STRING,
+			comment: STRING
+		}
+	Response: 
+		{
+		comments: [
+				{
+					userId: int 
+					timestamp: timestamp 
+					text: string # the actual comment 
+				},
+				...
+			]
+		}
+	"""
+	payload = request.json
+	try: 
+		photo_id = payload["photoId"]
+		user_id = payload["userId"]
+		comment = payload["comment"]
+		timestamp = time.now()
+	except:
+		print("missing fields")
+		return {"err": "malformed request. missing fields", "comments": None}
+
+	cursor = conn.cursor()
+	cursor.execute('''INSERT INTO Comment (user_id, timestamp, text, photo_id) VALUES (%s,%s,%s,%s)''', (user_id, timestamp, comment, photo_id))
+	return {"err": None, "comments": get_all_photo_comments(photo_id)}
+
+# begin list comment codes 
+@app.route('/comments/<int: photo_id>', methods=['GET'])
+@flask_login.login_required
+def list_comments(photo_id):
+	"""
+	GET: /comments/photoId
+	Response:
+		{
+		comments: [
+				{
+					userId: int 
+					timestamp: timestamp 
+					text: string # the actual comment 
+				},
+				...
+			]
+		}
+	"""
+	return {"err": None, "comments": get_all_photo_comments(photo_id)}
+# end get comments code 
 
 
 if __name__ == "__main__":

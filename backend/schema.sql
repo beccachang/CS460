@@ -17,6 +17,7 @@ Users (
 	 last_name VARCHAR(50), 
 	 email VARCHAR(50) NOT NULL,
 	 gender ENUM('M', 'F', 'O') ,
+	 hometown VARCHAR(50),
 	 date_of_birth DATE,
 	 password VARCHAR(255) NOT NULL, 
 	 PRIMARY KEY (user_id)
