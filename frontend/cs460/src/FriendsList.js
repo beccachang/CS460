@@ -6,25 +6,6 @@ import qs from 'qs';
 const { Title } = Typography;
 const {Search} = Input;
 
-const columns = [
-  {
-    title: 'Name',
-    dataIndex: 'name',
-    sorter: true,
-    render: name => `${name.first} ${name.last}`,
-    width: '20%',
-  },
-  {
-    title: 'Gender',
-    dataIndex: 'gender',
-    width: '20%',
-  },
-  {
-    title: 'Email',
-    dataIndex: 'email',
-  },
-];
-
 const getRandomuserParams = params => ({
   results: params.pagination.pageSize,
   page: params.pagination.current,
@@ -32,14 +13,75 @@ const getRandomuserParams = params => ({
 });
 
 class FriendsList extends React.Component {
-  state = {
-    data: [],
-    pagination: {
-      current: 1,
-      pageSize: 10,
+  constructor(props) {
+    super(props)
+    this.state = {
+      data: [],
+      pagination: {
+        current: 1,
+        pageSize: 10,
+      },
+      loading: false,
+    };
+  }
+ 
+  friendsColumns = [
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      sorter: true,
+      render: (name, record) => 
+      <a onClick={() => this.props.viewProfile({
+        firstName: name.first,
+        lastName: name.last,
+        email: record.email,
+        hometown: record.location.city,
+        dateOfBirth: record.dob,
+        gender: record.gender,
+        isFriend: true})}>
+        {name.first} {name.last}
+      </a>,
+      width: '20%',
     },
-    loading: false,
-  };
+    {
+      title: 'Gender',
+      dataIndex: 'gender',
+      width: '20%',
+    },
+    {
+      title: 'Email',
+      dataIndex: 'email',
+    },
+  ];
+
+  suggestedFriendsColumns = [
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      sorter: true,
+      render: (name, record) => 
+      <a onClick={() => this.props.pageChange({
+        firstName: name.first,
+        lastName: name.last,
+        email: record.email,
+        hometown: record.location.city,
+        dateOfBirth: record.dob,
+        gender: record.gender,
+        isFriend: false})}>
+        {name.first} {name.last}
+      </a>,
+      width: '20%',
+    },
+    {
+      title: 'Gender',
+      dataIndex: 'gender',
+      width: '20%',
+    },
+    {
+      title: 'Email',
+      dataIndex: 'email',
+    },
+  ];
 
   componentDidMount() {
     const { pagination } = this.state;
@@ -56,11 +98,12 @@ class FriendsList extends React.Component {
   };
 
   fetch = (params = {}) => {
+    // To do: get friends for user
+    // To do: get suggested friends for user
     this.setState({ loading: true });
     fetch(`https://randomuser.me/api?${qs.stringify(getRandomuserParams(params))}`)
       .then(res => res.json())
       .then(data => {
-        console.log(data);
         this.setState({
           loading: false,
           data: data.results,
@@ -83,24 +126,25 @@ class FriendsList extends React.Component {
                 title="My Friends"
                 extra={[    
                     // To do: filter table data based on search term
-                    <Search placeholder="Search Friends" allowClear onSearch={console.log("hello")} style={{ width: 200 }} />,
+                    <Search placeholder="Search Friends" allowClear onSearch={() => console.log("hello")} style={{ width: 200 }} />,
                 ]}
             />
             <Table
-            columns={columns}
-            rowKey={record => record.login.uuid}
-            dataSource={data}
-            pagination={pagination}
-            loading={loading}
-            onChange={this.handleTableChange}/>
+              columns={this.friendsColumns}
+              rowKey={record => record.login.uuid}
+              dataSource={data}
+              pagination={pagination}
+              loading={loading}
+              onChange={this.handleTableChange}
+              onClick={() =>console.log('hellowww')}/>
             <Title level={4}> Suggested Friends </Title>
             <Table
-            columns={columns}
-            rowKey={record => record.login.uuid}
-            dataSource={data}
-            pagination={pagination}
-            loading={loading}
-            onChange={this.handleTableChange}/>
+              columns={this.suggestedFriendsColumns}
+              rowKey={record => record.login.uuid}
+              dataSource={data}
+              pagination={pagination}
+              loading={loading}
+              onChange={this.handleTableChange}/>
         </div>
       
     );

@@ -4,23 +4,9 @@ import { Table, PageHeader, Button, Input, Popover } from 'antd';
 import qs from 'qs';
 import {
     PlusOutlined
-  } from '@ant-design/icons';
+} from '@ant-design/icons';
 
 const {Search} = Input;
-const columns = [
-  {
-    title: 'Name',
-    dataIndex: 'name',
-    sorter: true,
-    render: name => `${name.first} ${name.last}`,
-    width: '20%',
-  },
-  {
-    title: 'Creation Date',
-    dataIndex: ['dob', 'date'],
-    width: '20%',
-  },
-];
 
 const getRandomuserParams = params => ({
   results: params.pagination.pageSize,
@@ -37,6 +23,21 @@ class AlbumsList extends React.Component {
     },
     loading: false,
   };
+
+  columns = [
+    {
+      title: 'Name',
+      dataIndex: 'name',
+      sorter: true,
+      render: (name, record) => <a onClick={() => this.props.viewAlbum(record)}>{name.first} {name.last}</a>,
+      width: '20%',
+    },
+    {
+      title: 'Creation Date',
+      dataIndex: ['dob', 'date'],
+      width: '20%',
+    },
+  ];
 
   componentDidMount() {
     const { pagination } = this.state;
@@ -57,7 +58,6 @@ class AlbumsList extends React.Component {
     fetch(`https://randomuser.me/api?${qs.stringify(getRandomuserParams(params))}`)
       .then(res => res.json())
       .then(data => {
-        console.log(data);
         this.setState({
           loading: false,
           data: data.results,
@@ -97,7 +97,7 @@ class AlbumsList extends React.Component {
                 ]}
             />
             <Table
-            columns={columns}
+            columns={this.columns}
             rowKey={record => record.login.uuid}
             dataSource={data}
             pagination={pagination}
