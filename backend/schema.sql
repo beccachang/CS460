@@ -55,12 +55,20 @@ Photo (
 photo_id INTEGER, 
 caption VARCHAR(255),
 data VARBINARY(255) NOT NULL,
--- likes_user_ids SET,
--- tags SET, 
 album_id INTEGER NOT NULL,
 PRIMARY KEY (photo_id),
 FOREIGN KEY (album_id) REFERENCES Album(album_id)
 ON DELETE CASCADE);
+
+/* relationship mapping likes to a photo */ 
+CREATE TABLE 
+Liked_Photo (
+	photo_id INTEGER, 
+	user_id INTEGER, 
+	PRIMARY KEY (photo_id, user_id), 
+	FOREIGN KEY photo_id REFERENCES user_id ON DELETE CASCADE, 
+	FOREIGN KEY user_id REFERENCES Users(user_id)
+);
 
 /* Comment - comment weak entity and it’s identifying relationship - participation and foreign key constraints */
 
@@ -84,6 +92,15 @@ Tag (
 	tag_id INTEGER, 
 	name VARCHAR(50),
 	quantity INTEGER DEFAULT 1,
--- 	photo_ids SET, 
 	UNIQUE (name),
 	PRIMARY KEY (tag_id));
+
+/* relationship mapping tags to photos */ 
+CREATE TABLE 
+Tagged_Photos (
+	tag_id INTEGER, 
+	photo_id INTEGER, 
+	PRIMARY KEY (tag_id, photo_id), 
+	FOREIGN KEY tag_id REFERENCES Tag(tag_id),
+	FOREIGN KEY photo_id REFERENCES Photo(photo_id)
+);
