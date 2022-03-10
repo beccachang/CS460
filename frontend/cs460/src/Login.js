@@ -14,18 +14,19 @@ class Loginpage extends React.Component {
 
     onFinish = values => {
         console.log(values);
-        var formdata = new FormData();
-        formdata.append('email', values.username);
-        formdata.append('password', values.password);
+        var payload = JSON.stringify({
+            email: values.username, 
+            password: values.password
+        })
 
         var requestOptions = {
             method: 'POST',
-            body: formdata,
+            body: payload,
             redirect: 'follow'
         };
 
         fetch("http://127.0.0.1:5000/login", requestOptions)
-        .then(() => this.props.login(values.username))
+        .then(result => console.log(result))
         .catch(error => console.log('error', error));
     };
   

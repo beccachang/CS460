@@ -9,14 +9,13 @@
 # see links for further understanding
 ###################################################
 
+import logging
 from turtle import home
 from typing import Type
-import flask
 from flask import Flask, request
 from flaskext.mysql import MySQL
 import flask_login
 from flask_cors import CORS
-
 from dateutil import parser
 
 #for image uploading
@@ -30,6 +29,12 @@ mysql = MySQL()
 
 app = Flask(__name__)
 CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
+cors = CORS(app, resource={
+    r"/*":{
+        "origins":"*"
+    }
+})
 
 app.secret_key = 'super secret string'  # Change this!
 
