@@ -10,10 +10,12 @@
 ###################################################
 
 from turtle import home
+from typing import Type
 import flask
-from flask import Flask, Response, request, render_template, redirect, url_for
+from flask import Flask, request
 from flaskext.mysql import MySQL
 import flask_login
+from dateutil import parser
 
 #for image uploading
 import os, base64
@@ -82,7 +84,7 @@ def new_page_function():
 	return new_page_html
 '''
 
-@app.route('/login', methods=['GET'])
+@app.route('/login', methods=['POST'])
 def login():
 	""" 
 	login(): 
@@ -109,7 +111,7 @@ def login():
 	invalid creds err: { err: invalid credentials, profile: None }
 
 	"""
-	payload = flask.request.json
+	payload = request.get_json(force=True)
 	try:
 		email = payload['email']
 		given_password = payload['password']
@@ -128,12 +130,12 @@ def login():
 			return {
 				"err": None, 
 				"profile": {
-					"first_name": str(data[1][0]), 
-					"last_name": str(data[2][0]), 
-					"email": str(data[3][0]),
-					"gender": str(data[4][0]),
-					"hometown": str(data[5][0]),
-					"date_of_birth": data[6][0]
+					"first_name": str(data[0][1]), 
+					"last_name": str(data[0][2]), 
+					"email": str(data[0][3]),
+					"gender": str(data[0][4]),
+					"hometown": str(data[0][5]),
+					"date_of_birth": data[0][6]
 				}
 			}
 	# information did not match
@@ -191,17 +193,18 @@ def register_user():
 			profile: None
 		}
 	"""
-	payload = flask.request.json 
+	payload = request.get_json(force=True)
 	try:
 		first_name = payload["first_name"]
 		last_name = payload["last_name"]
 		email = payload["email"]
 		gender = payload["gender"]
-		date_of_birth = payload["date_of_birth"]
+		date_of_birth = parser.parse(payload["date_of_birth"])
 		hometown = payload["hometown"]
 		password = payload["password"]
-	except:
-		print("couldn't find all tokens") #this prints to shell, end users will not see this (all print statements go to shell)
+	except Exception as ex:
+		print(ex)
+		# print("couldn't find all tokens") #this prints to shell, end users will not see this (all print statements go to shell)
 		return {"err": "missing fields", "profile": None}
 	cursor = conn.cursor()
 	test = isEmailUnique(email)
@@ -311,7 +314,7 @@ def new_album():
 	
 	missing field: {"err": "malformed request. missing fields", "data": None}
 	"""
-	payload = request.json 
+	payload = request.get_json(force=True) 
 	uid = getUserIdFromEmail(flask_login.current_user.id)
 	date_of_creation = datetime.date.today()
 	try:
@@ -399,7 +402,7 @@ def upload_file():
 	
 	errors: {"err": "malformed request. missing fields", "data": None}
 	"""
-	payload = request.json 
+	payload = request.get_json(force=True) 
 	try:
 		caption = payload["caption"]
 		album_id = payload["album_id"]
@@ -474,7 +477,7 @@ def add_friend():
 	
 	errors: {"err": "malformed request. missing fields", "data": None}
 	"""
-	payload = request.json 
+	payload = request.get_json(force=True) 
 	try: 
 		user_id = payload["userId"]
 		friend_id = payload["friendUserId"]
@@ -581,7 +584,7 @@ def new_comment():
 			]
 		}
 	"""
-	payload = request.json
+	payload = request.get_json(force=True)
 	try: 
 		photo_id = payload["photoId"]
 		user_id = payload["userId"]
