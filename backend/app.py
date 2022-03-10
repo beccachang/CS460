@@ -15,6 +15,8 @@ import flask
 from flask import Flask, request
 from flaskext.mysql import MySQL
 import flask_login
+from flask_cors import CORS
+
 from dateutil import parser
 
 #for image uploading
@@ -25,7 +27,10 @@ import datetime
 import time
 
 mysql = MySQL()
+
 app = Flask(__name__)
+CORS(app)
+
 app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
