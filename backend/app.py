@@ -255,7 +255,7 @@ def isEmailUnique(email):
 
 # begin get profile code 
 @app.route("/profile/<int:user_id>", methods=['GET'])
-@flask_login.login_required 
+# @flask_login.login_required 
 def get_profile(user_id):
 	"""
 	get_profile():
@@ -276,9 +276,9 @@ def get_profile(user_id):
 	uid = user_id
 	cursor = conn.cursor()
 	# user info 
-	cursor.execute("SELECT user_id, first_name, last_name FROM Users WHERE user_id = '{0}'").format(uid)
+	cursor.execute("SELECT user_id, first_name, last_name FROM Users WHERE user_id = '{0}'".format(uid))
 	user_info = cursor.fetchone()
-
+	
 	# albums for the user 
 	cursor.execute("SELECT name, date_of_creation FROM Album WHERE user_id = '{0}'".format(uid))
 	user_albums = [] 
@@ -289,8 +289,7 @@ def get_profile(user_id):
 				"creationDate": tup[1]
 			}
 		)
-	
-	return {"userId": user_info[0][0], "firstName": user_info[0][1], "lastName": user_info[0][2], "albums": user_albums}
+	return {"userId": user_info[0], "firstName": user_info[1], "lastName": user_info[2], "albums": user_albums}
 
 #begin album creation code 
 
