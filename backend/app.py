@@ -55,7 +55,7 @@ def getUserFromEmail(email):
 	print(email)
 	cursor = conn.cursor()
 	cursor.execute("SELECT user_id FROM Users WHERE email = '{0}'".format(email))
-	return cursor.fetchone()[0][0]
+	return cursor.fetchone()[0]
 
 class User(flask_login.UserMixin):
 	pass
@@ -215,7 +215,7 @@ def register_user():
 		password = payload["password"]
 	except Exception as ex:
 		print(ex)
-		# print("couldn't find all tokens") #this prints to shell, end users will not see this (all print statements go to shell)
+		print("couldn't find all tokens") #this prints to shell, end users will not see this (all print statements go to shell)
 		return {"err": "missing fields", "profile": None}
 	cursor = conn.cursor()
 	test = isEmailUnique(email)
