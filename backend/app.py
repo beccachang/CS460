@@ -52,8 +52,9 @@ def getUserList():
 	return cursor.fetchall()
 
 def getUserFromEmail(email):
+	print(email)
 	cursor = conn.cursor()
-	cursor.execute("SELECT user_id FROM Users WHERE email = {0}".format(email))
+	cursor.execute("SELECT user_id FROM Users WHERE email = '{0}'".format(email))
 	return cursor.fetchone()[0][0]
 
 class User(flask_login.UserMixin):
@@ -219,7 +220,7 @@ def register_user():
 	cursor = conn.cursor()
 	test = isEmailUnique(email)
 	if test:
-		print(cursor.execute("INSERT INTO Users (first_name, last_name, email, gender, hometown, date_of_birth, password) VALUES ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}') returning user_id".format(first_name, last_name, email, gender, hometown, date_of_birth, password)))
+		print(cursor.execute("INSERT INTO Users (first_name, last_name, email, gender, hometown, date_of_birth, password) VALUES ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}')".format(first_name, last_name, email, gender, hometown, date_of_birth, password)))
 		conn.commit()
 		#log user in
 		user = User()
@@ -228,7 +229,7 @@ def register_user():
 		return {
 			"err": None, 
 			"profile": {
-				"user_id": str(cursor.fetchone()[0][7]),
+				"user_id": getUserFromEmail(email),
 				"first_name": first_name, 
 				"last_name": last_name, 
 				"email": email,
