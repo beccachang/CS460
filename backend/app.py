@@ -251,7 +251,7 @@ def isEmailUnique(email):
 
 
 # begin get profile code 
-@app.route("/profile/<int: user_id>", methods=['GET'])
+@app.route("/profile/<int:user_id>", methods=['GET'])
 @flask_login.login_required 
 def get_profile(user_id):
 	"""
@@ -327,7 +327,7 @@ def new_album():
 
 
 # begin album list code 
-@app.route('/albums/<int: album_id>', methods=['GET'])
+@app.route('/albums/<int:album_id>', methods=['GET'])
 @flask_login.login_required
 def list_album(album_id):
 	""" 
@@ -596,7 +596,7 @@ def new_comment():
 	return {"err": None, "comments": get_all_photo_comments(photo_id)}
 
 # begin list comment codes 
-@app.route('/comments/<int: photo_id>', methods=['GET'])
+@app.route('/comments/<int:photo_id>', methods=['GET'])
 @flask_login.login_required
 def list_comments(photo_id):
 	"""

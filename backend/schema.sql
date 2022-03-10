@@ -66,8 +66,8 @@ Liked_Photo (
 	photo_id INTEGER, 
 	user_id INTEGER, 
 	PRIMARY KEY (photo_id, user_id), 
-	FOREIGN KEY photo_id REFERENCES user_id ON DELETE CASCADE, 
-	FOREIGN KEY user_id REFERENCES Users(user_id)
+	FOREIGN KEY (photo_id) REFERENCES user_id ON DELETE CASCADE, 
+	FOREIGN KEY (user_id) REFERENCES Users(user_id)
 );
 
 /* Comment - comment weak entity and it’s identifying relationship - participation and foreign key constraints */
@@ -101,6 +101,6 @@ Tagged_Photos (
 	tag_id INTEGER, 
 	photo_id INTEGER, 
 	PRIMARY KEY (tag_id, photo_id), 
-	FOREIGN KEY tag_id REFERENCES Tag(tag_id),
-	FOREIGN KEY photo_id REFERENCES Photo(photo_id)
+	FOREIGN KEY (tag_id) REFERENCES Tag(tag_id),
+	FOREIGN KEY (photo_id) REFERENCES Photo(photo_id)
 );
