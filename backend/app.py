@@ -33,6 +33,8 @@ app.config['MYSQL_DATABASE_USER'] = 'root'
 app.config['MYSQL_DATABASE_PASSWORD'] = ''
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+# app.before_request_funcs.setdefault(None, [decode_cookie])
+
 mysql.init_app(app)
 
 #begin code used for login
@@ -48,6 +50,11 @@ def getUserList():
 	cursor = conn.cursor()
 	cursor.execute("SELECT email from Users")
 	return cursor.fetchall()
+
+def getUserFromEmail(email):
+	cursor = conn.cursor()
+	cursor.execute("SELECT user_id FROM Users WHERE email = {0}".format(email))
+	return cursor.fetchone()[0][0]
 
 class User(flask_login.UserMixin):
 	pass
@@ -99,6 +106,7 @@ def login():
 		{
 			err: None 
 			profile: {
+				"user_id": string 
 				"first_name": string 
 				"last_name": string 
 				"email": string 
@@ -119,7 +127,7 @@ def login():
 		return {"err": "malformed request. missing fields", "profile": None}
 	cursor = conn.cursor()
 	# check if email is registered
-	if cursor.execute("SELECT password, first_name, last_name, email, gender, hometown, date_of_birth FROM Users WHERE email = '{0}'".format(email)):
+	if cursor.execute("SELECT password, first_name, last_name, email, gender, hometown, date_of_birth, user_id FROM Users WHERE email = '{0}'".format(email)):
 		data = cursor.fetchall()
 		pwd = str(data[0][0])
 		if given_password == pwd:
@@ -130,6 +138,7 @@ def login():
 			return {
 				"err": None, 
 				"profile": {
+					"user_id": str(data[0][7]),
 					"first_name": str(data[0][1]), 
 					"last_name": str(data[0][2]), 
 					"email": str(data[0][3]),
@@ -175,7 +184,8 @@ def register_user():
 				"last_name": string 
 				"email": string 
 				"gender": string 
-				"date_of_birth": timestamp 
+				"date_of_birth": timestamp
+				"user_id": string 
 			}
 		}
 	
@@ -209,7 +219,7 @@ def register_user():
 	cursor = conn.cursor()
 	test = isEmailUnique(email)
 	if test:
-		print(cursor.execute("INSERT INTO Users (first_name, last_name, email, gender, hometown, date_of_birth, password) VALUES ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}')".format(first_name, last_name, email, gender, hometown, date_of_birth, password)))
+		print(cursor.execute("INSERT INTO Users (first_name, last_name, email, gender, hometown, date_of_birth, password) VALUES ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}') returning user_id".format(first_name, last_name, email, gender, hometown, date_of_birth, password)))
 		conn.commit()
 		#log user in
 		user = User()
@@ -218,6 +228,7 @@ def register_user():
 		return {
 			"err": None, 
 			"profile": {
+				"user_id": str(cursor.fetchone()[0][7]),
 				"first_name": first_name, 
 				"last_name": last_name, 
 				"email": email,
@@ -255,7 +266,6 @@ def isEmailUnique(email):
 
 # begin get profile code 
 @app.route("/profile/<int:user_id>", methods=['GET'])
-# @flask_login.login_required 
 def get_profile(user_id):
 	"""
 	get_profile():
@@ -294,14 +304,14 @@ def get_profile(user_id):
 #begin album creation code 
 
 @app.route('/album/new', methods=['POST'])
-@flask_login.login_required
 def new_album():
 	""" 
 	new_album(): 
 
 	payload: 
 		{
-			"name": string 
+			"name": string,
+			"email": string
 		}
 	
 	response: 
@@ -314,14 +324,15 @@ def new_album():
 	missing field: {"err": "malformed request. missing fields", "data": None}
 	"""
 	payload = request.get_json(force=True) 
-	uid = getUserIdFromEmail(flask_login.current_user.id)
 	date_of_creation = datetime.date.today()
+	cursor = conn.cursor()
 	try:
 		name = payload["name"]
+		email = payload["email"]
+		uid = getUserIdFromEmail(email)
 	except: 
 		print("Missing fields")
 		return {"err": "malformed request. missing fields", "data": None}
-	cursor = conn.cursor()
 	cursor.execute('''INSERT INTO Album (name, date_of_creation, user_id) VALUES (%s, %s, %s ) returning (album_id, name, date_of_creation)''' ,(name, date_of_creation, uid))
 	conn.commit()
 	return {"err": None, "data": {"album_id": cursor.fetchone()[0]}}
@@ -330,7 +341,6 @@ def new_album():
 
 # begin album list code 
 @app.route('/albums/<int:album_id>', methods=['GET'])
-@flask_login.login_required
 def list_album(album_id):
 	""" 
 	list_albums():
@@ -371,13 +381,13 @@ def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 @app.route('/newPhoto', methods=['POST'])
-@flask_login.login_required
 def upload_file():
 	""" 
 	upload_file(): 
 
 	payload: 
 	{
+		email: string,
 		albumId: STRING,
 		photoId: STRING,
 		caption: STRING,
@@ -431,7 +441,7 @@ def upload_file():
 
 #begin photo list for specific album code 
 @app.route('/photo/list', methods=['GET'])
-@flask_login.login_required
+# @flask_login.login_required
 def list_photos():
 	""" 
 	list_photos():
@@ -457,7 +467,7 @@ def list_photos():
 
 # begin add friend code 
 @app.route('/addFriend', methods=['POST'])
-@flask_login.login_required
+# @flask_login.login_required
 def add_friend():
 	"""
 	add_friend():
@@ -492,7 +502,7 @@ def add_friend():
 
 # begin list friend code 
 @app.route('/friends/<int:user_id>', methods=['GET'])
-@flask_login.login_required
+# @flask_login.login_required
 def list_friends(user_id):
 	"""
 	list_friends():
@@ -560,7 +570,7 @@ def get_all_photo_comments(photo_id):
 # begin add comment code 
 
 @app.route('/newComment', methods=['POST'])
-@flask_login.login_required 
+# @flask_login.login_required 
 def new_comment():
 	"""
 	POST: /newComment
@@ -599,7 +609,7 @@ def new_comment():
 
 # begin list comment codes 
 @app.route('/comments/<int:photo_id>', methods=['GET'])
-@flask_login.login_required
+# @flask_login.login_required
 def list_comments(photo_id):
 	"""
 	GET: /comments/photoId

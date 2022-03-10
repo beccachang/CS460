@@ -15,7 +15,7 @@ Users (
 	 user_id INTEGER AUTO_INCREMENT, 
 	 first_name VARCHAR(50),
 	 last_name VARCHAR(50), 
-	 email VARCHAR(50) NOT NULL,
+	 email VARCHAR(50) UNIQUE NOT NULL,
 	 gender ENUM('M', 'F', 'O') ,
 	 hometown VARCHAR(50),
 	 date_of_birth DATE,
@@ -66,7 +66,7 @@ Liked_Photo (
 	photo_id INTEGER, 
 	user_id INTEGER, 
 	PRIMARY KEY (photo_id, user_id), 
-	FOREIGN KEY (photo_id) REFERENCES user_id ON DELETE CASCADE, 
+	FOREIGN KEY (photo_id) REFERENCES Users(user_id) ON DELETE CASCADE, 
 	FOREIGN KEY (user_id) REFERENCES Users(user_id)
 );
 
