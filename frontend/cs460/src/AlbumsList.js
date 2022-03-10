@@ -22,6 +22,7 @@ class AlbumsList extends React.Component {
       pageSize: 10,
     },
     loading: false,
+    newAlbumName: null,
   };
 
   columns = [
@@ -53,6 +54,10 @@ class AlbumsList extends React.Component {
     });
   };
 
+  createNewAlbum = () => {
+
+  }
+
   fetch = (params = {}) => {
     this.setState({ loading: true });
     fetch(`https://randomuser.me/api?${qs.stringify(getRandomuserParams(params))}`)
@@ -75,9 +80,9 @@ class AlbumsList extends React.Component {
     const { data, pagination, loading } = this.state;
     const content = (
         <Input.Group compact>
-            <Input style={{ width: 'calc(70%)' }} placeholder={'Album name'} />
+            <Input style={{ width: 'calc(70%)' }} placeholder={'Album name'} onChange={event => this.setState({newAlbumName: event.target.value})}/>
             {/* To do: submit action. Check if any albums already have this name */}
-            <Button >Submit</Button>
+            <Button onClick={() => this.createNewAlbum(this.state.newAlbumName)}>Submit</Button>
         </Input.Group>
       );
     return (

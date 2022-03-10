@@ -15,11 +15,12 @@ class App extends React.Component {
     super(props)
     this.state = {
       isLoggedIn: true,
+      username: null,
     };
   }
 
-  login = () => {
-      this.setState({isLoggedIn: true}, function() {
+  login = (username) => {
+      this.setState({isLoggedIn: true, username: username}, function() {
         window.history.pushState(null, "New Page Title", "/home");
         window.location.reload();
       });
@@ -27,17 +28,17 @@ class App extends React.Component {
   }
 
   render() {
-    const { isLoggedIn } = this.state;
+    const { isLoggedIn, username } = this.state;
 
     return (
         <Router>
           <div>
           <Routes>
-            <Route path="/" element={<Loginpage loggedIn={isLoggedIn} login={() => this.login()}/>}/>
+            <Route path="/" element={<Loginpage loggedIn={isLoggedIn} login={username => this.login(username)}/>}/>
             {isLoggedIn ? 
               <Route 
                 path="/home"
-                element={<Homepage/>}
+                element={<Homepage username={username}/>}
               /> : null}
             {!isLoggedIn ? 
               <Route 

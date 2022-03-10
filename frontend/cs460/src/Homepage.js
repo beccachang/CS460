@@ -20,12 +20,16 @@ const { Header, Content, Footer, Sider } = Layout;
 const { SubMenu } = Menu;
 
 class Homepage extends React.Component {
-  state = {
-    showingPage: 'home',
-    collapsed: false,
-    loadedProfile: null,
-    viewingAlbum: null
-  };
+  constructor(props) {
+    super(props);
+    this.state = {
+      showingPage: 'home',
+      collapsed: false,
+      loadedProfile: null,
+      viewingAlbum: null
+    };
+  }
+
 
   onCollapse = collapsed => {
     this.setState({ collapsed });
@@ -91,10 +95,10 @@ class Homepage extends React.Component {
           <Content style={{ margin: '0 16px' }}>
             <div className="site-layout-background" style={{ padding: 24, minHeight: 360 }}>
               {showingPage === 'home' ? <Feed/> : null}
-              {showingPage === 'profile' ? <Profile profile={loadedProfile} visitExternalAlbumPage={() => this.visitExternalAlbumPage()}/> : null}
-              {showingPage === 'album' ? <UserAlbumPage album={viewingAlbum}/> : null}
-              {showingPage === 'albums' ? <AlbumsList viewAlbum={album => this.visitAlbumPage(album)}/> : null}
-              {showingPage === 'friends' ? <FriendsList viewProfile={account => this.visitProfilePage(account)}/> : null}
+              {showingPage === 'profile' ? <Profile username={this.props.username} profile={loadedProfile} visitExternalAlbumPage={() => this.visitExternalAlbumPage()}/> : null}
+              {showingPage === 'album' ? <UserAlbumPage album={viewingAlbum} username={this.props.username}/> : null}
+              {showingPage === 'albums' ? <AlbumsList username={this.props.username} viewAlbum={album => this.visitAlbumPage(album)}/> : null}
+              {showingPage === 'friends' ? <FriendsList username={this.props.username} viewProfile={account => this.visitProfilePage(account)}/> : null}
               {showingPage === 'externalAlbum' ? <ExternalAlbumPage /> : null}
             </div>
           </Content>
