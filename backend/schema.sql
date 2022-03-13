@@ -54,6 +54,7 @@ CREATE TABLE
 Photo ( 
 photo_id INTEGER AUTO_INCREMENT, 
 caption VARCHAR(255),
+likes INTEGER, 
 data VARBINARY(255) NOT NULL,
 album_id INTEGER NOT NULL,
 PRIMARY KEY (photo_id),

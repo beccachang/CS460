@@ -36,6 +36,7 @@ cors = CORS(app, resource={
     }
 })
 
+
 app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
@@ -344,8 +345,9 @@ def new_album():
 	except: 
 		print("Missing fields")
 		return {"err": "malformed request. missing fields", "data": None}
-	cursor.execute('''INSERT INTO Album (name, date_of_creation, user_id) VALUES (%s, %s, %s ) returning (album_id, name, date_of_creation)''' ,(name, date_of_creation, uid))
+	cursor.execute('''INSERT INTO Album (name, date_of_creation, user_id) VALUES (%s, %s, %s )''' ,(name, date_of_creation, uid))
 	conn.commit()
+	cursor.execute('''SELECT album_id, name, date_of_creation FROM Album WHERE album_id = LAST_INSERT_ID()''')
 	return {"err": None, "data": {"album_id": cursor.fetchone()[0]}}
 # end album creation code 
 
