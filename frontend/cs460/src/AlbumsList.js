@@ -17,6 +17,7 @@ const getRandomuserParams = params => ({
 class AlbumsList extends React.Component {
   state = {
     data: [],
+    fullData: [],
     pagination: {
       current: 1,
       pageSize: 10,
@@ -55,6 +56,31 @@ class AlbumsList extends React.Component {
   };
 
   createNewAlbum = () => {
+    // VIVIEN: Here's my shot at making a new album - it does work :) 
+    // the endpoint is /albums/<int:user_id> 
+
+    var payload = JSON.stringify({
+      name: this.state.newAlbumName,
+      userID: this.props.userID
+    });
+
+    var requestOptions = {
+        method: 'POST',
+        body: payload,
+        redirect: 'follow'
+    };
+
+    fetch("http://127.0.0.1:5000/album/new", requestOptions)
+    .then(result => { 
+        var res = result.json(); 
+        res.then( data => {
+            if (data.err) { console.log(data.err); return; }
+            // TODO : maybe do something with this data
+            console.log(data.data);
+        });
+    })
+    .catch(error => console.log('error', error));
+
 
   }
 
@@ -66,6 +92,7 @@ class AlbumsList extends React.Component {
         this.setState({
           loading: false,
           data: data.results,
+          fullData: data.results,
           pagination: {
             ...params.pagination,
             total: data.totalCount,
@@ -75,6 +102,20 @@ class AlbumsList extends React.Component {
         });
       });
   };
+
+  filterTable = (value) => {
+    value = value.toLowerCase();
+    var filterData = this.state.fullData.filter(v => {
+      return v.dob.date.indexOf(value) > -1 ||  v.name.first.indexOf(value) > -1 || v.name.last.indexOf(value) > -1;
+    });
+    this.setState({data: filterData});
+  };
+
+  clearTable = (value) => {
+    if (value == "") {
+      this.setState({data: this.state.fullData});
+    }
+  }
 
   render() {
     const { data, pagination, loading } = this.state;
@@ -92,7 +133,7 @@ class AlbumsList extends React.Component {
                 title="Albums"
                 extra={[    
                     // To do: filter table data based on search term
-                    <Search placeholder="Search Albums" allowClear onSearch={() => console.log("hello")} style={{ width: 200 }} />,
+                    <Search placeholder="Search Albums" allowClear onChange={event => this.clearTable(event.target.value)} onSearch={str => this.filterTable(str)} style={{ width: 200 }} />,
                     <Popover placement="bottomLeft" content={content} trigger="click">
                         <Button key="1" type="primary" icon={<PlusOutlined/>}>
                         New Album

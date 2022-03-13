@@ -323,7 +323,7 @@ def new_album():
 	payload: 
 		{
 			"name": string,
-			"email": string
+			"userID": string
 		}
 	
 	response: 
@@ -340,21 +340,50 @@ def new_album():
 	cursor = conn.cursor()
 	try:
 		name = payload["name"]
-		email = payload["email"]
-		uid = getUserIdFromEmail(email)
+		uid = payload["userID"]
 	except: 
 		print("Missing fields")
 		return {"err": "malformed request. missing fields", "data": None}
 	cursor.execute('''INSERT INTO Album (name, date_of_creation, user_id) VALUES (%s, %s, %s )''' ,(name, date_of_creation, uid))
 	conn.commit()
 	cursor.execute('''SELECT album_id, name, date_of_creation FROM Album WHERE album_id = LAST_INSERT_ID()''')
-	return {"err": None, "data": {"album_id": cursor.fetchone()[0]}}
+	data = cursor.fetchone()
+	return {"err": None, "data": {"album_id": data[0], "album_name": data[1], "date_of_creation": data[2]}}
 # end album creation code 
+
+# begin album list for user 
+@app.route('/albums/<int:user_id>') 
+def list_user_albums(user_id): 
+	"""
+	list_user_albums(): 
+
+	{
+		albums: [
+			{
+				"name": string, 
+				"Creation Date": string
+			}
+		]
+	}
+	"""
+	cursor = conn.cursor()
+	cursor.execute('''SELECT name, date_of_creation FROM Album WHERE user_id = {0}'''.format(user_id))
+	data = cursor.fetchall()
+	albums = [] 
+	for tuple in data: 
+		albums.append(
+			{
+				"name": tuple[0],
+				"date": tuple[1]
+			}
+		)
+	return {"err": None, "albums": albums}
+
 
 
 # begin album list code 
-@app.route('/albums/<int:album_id>', methods=['GET'])
-def list_album(album_id):
+@app.route('/albumPhotos/<int:album_id>', methods=['GET'])
+def list_album_photos(album_id):
 	""" 
 	list_albums():
 

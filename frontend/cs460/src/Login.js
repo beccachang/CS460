@@ -13,7 +13,6 @@ class Loginpage extends React.Component {
     }
 
     onFinish = values => {
-        console.log(values);
         var payload = JSON.stringify({
             email: values.username, 
             password: values.password
@@ -26,12 +25,19 @@ class Loginpage extends React.Component {
         };
 
         fetch("http://127.0.0.1:5000/login", requestOptions)
-        .then(result => console.log(result))
+        .then(result => { 
+            var res = result.json(); 
+            res.then( data => {
+                if (data.err) { console.log(data.err); return; }
+                var username = data.profile.email;
+                var userID = data.profile.user_id; 
+                this.props.login(username, userID);
+            });
+        })
         .catch(error => console.log('error', error));
     };
   
     render() {
-        console.log(this.props);
         return (
             <Form
                 name="normal_login"

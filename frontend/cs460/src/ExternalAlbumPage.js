@@ -67,20 +67,34 @@ class ExternalAlbumPage extends React.Component {
   fetch = (params = {}) => {
     this.setState({ loading: true });
     // To do: Get albums associated with the user
-    fetch(`https://randomuser.me/api?${qs.stringify(getRandomuserParams(params))}`)
-      .then(res => res.json())
-      .then(data => {
-        this.setState({
-          loading: false,
-          albums: data.results,
-          pagination: {
-            ...params.pagination,
-            total: data.totalCount,
-            // 200 is mock data, you should read it from server
-            // total: data.totalCount,
-          },
+
+    // VIVIEN: Here's my shot at doing that :) 
+    // the endpoint is /albums/<int:user_id> 
+    fetch(`http://127.0.0.1:5000/albums/${qs.stringify(this.props.userID)}`)
+      .then(result => { 
+        var res = result.json(); 
+        res.then( data => {
+            if (data.err) { console.log(data.err); return; }
+            // TODO : maybe do something with this data
+            console.log(data.data);
         });
       });
+
+
+    // fetch(`https://randomuser.me/api?${qs.stringify(getRandomuserParams(params))}`)
+    //   .then(res => res.json())
+    //   .then(data => {
+    //     this.setState({
+    //       loading: false,
+    //       albums: data.results,
+    //       pagination: {
+    //         ...params.pagination,
+    //         total: data.totalCount,
+    //         // 200 is mock data, you should read it from server
+    //         // total: data.totalCount,
+    //       },
+    //     });
+    //   });
   };
 
   render() {

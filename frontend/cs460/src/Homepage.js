@@ -95,11 +95,11 @@ class Homepage extends React.Component {
           <Content style={{ margin: '0 16px' }}>
             <div className="site-layout-background" style={{ padding: 24, minHeight: 360 }}>
               {showingPage === 'home' ? <Feed/> : null}
-              {showingPage === 'profile' ? <Profile username={this.props.username} profile={loadedProfile} visitExternalAlbumPage={() => this.visitExternalAlbumPage()}/> : null}
-              {showingPage === 'album' ? <UserAlbumPage album={viewingAlbum} username={this.props.username}/> : null}
-              {showingPage === 'albums' ? <AlbumsList username={this.props.username} viewAlbum={album => this.visitAlbumPage(album)}/> : null}
-              {showingPage === 'friends' ? <FriendsList username={this.props.username} viewProfile={account => this.visitProfilePage(account)}/> : null}
-              {showingPage === 'externalAlbum' ? <ExternalAlbumPage /> : null}
+              {showingPage === 'profile' ? <Profile username={this.props.username} userID={this.props.userID} profile={loadedProfile} visitExternalAlbumPage={() => this.visitExternalAlbumPage()}/> : null}
+              {showingPage === 'album' ? <UserAlbumPage album={viewingAlbum} username={this.props.username} userID={this.props.userID}/> : null}
+              {showingPage === 'albums' ? <AlbumsList username={this.props.username} userID={this.props.userID} viewAlbum={album => this.visitAlbumPage(album)}/> : null}
+              {showingPage === 'friends' ? <FriendsList username={this.props.username} userID={this.props.userID} viewProfile={account => this.visitProfilePage(account)}/> : null}
+              {showingPage === 'externalAlbum' ? <ExternalAlbumPage username={this.props.username} userID={this.props.userID} /> : null}
             </div>
           </Content>
           <Footer style={{ textAlign: 'center' }}>CS460 Project :)</Footer>
