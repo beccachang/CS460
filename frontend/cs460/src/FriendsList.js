@@ -101,20 +101,31 @@ class FriendsList extends React.Component {
     // To do: get friends for user
     // To do: get suggested friends for user
     this.setState({ loading: true });
-    fetch(`https://randomuser.me/api?${qs.stringify(getRandomuserParams(params))}`)
-      .then(res => res.json())
-      .then(data => {
-        this.setState({
-          loading: false,
-          data: data.results,
-          pagination: {
-            ...params.pagination,
-            total: 200,
-            // 200 is mock data, you should read it from server
-            // total: data.totalCount,
-          },
-        });
-      });
+
+    // VIVIEN: User's friends 
+    // endpoint is /friends/<int:user_id>
+    fetch(`http://127.0.0.1:5000/friends/${this.props.userID}`)
+    .then(res => res.json())
+    .then(data => {
+      // TODO: this needs to be integrated to the table
+      console.log(data);
+      this.setState({loading: false});
+    })
+
+    // fetch(`https://randomuser.me/api?${qs.stringify(getRandomuserParams(params))}`)
+    //   .then(res => res.json())
+    //   .then(data => {
+    //     this.setState({
+    //       loading: false,
+    //       data: data.results,
+    //       pagination: {
+    //         ...params.pagination,
+    //         total: 200,
+    //         // 200 is mock data, you should read it from server
+    //         // total: data.totalCount,
+    //       },
+    //     });
+    //   });
   };
 
   render() {

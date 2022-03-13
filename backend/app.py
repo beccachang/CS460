@@ -559,7 +559,7 @@ def list_friends(user_id):
 	"""	
 	uid = user_id
 	cursor = conn.cursor()
-	cursor.execute("SELECT (user_id, first_name, last_name) FROM Users WHERE user_id IN (SELECT (friend_id) FROM FRIENDS_WITH WHERE user_id = '{0}')".format(uid))
+	cursor.execute("SELECT user_id, first_name, last_name FROM Users WHERE user_id IN (SELECT friend_two_id FROM FRIENDS_WITH WHERE friend_one_id = '{0}')".format(uid))
 	# the current friends 
 	friend_list = []
 	for tup in cursor.fetchall():
@@ -571,15 +571,7 @@ def list_friends(user_id):
 			}
 		)
 	# now get suggested friends 
-	cursor = conn.cursor()
-
-	friends_of_friends_query = """
-								SELECT (user_id, first_name, last_name) FROM (
-									SELECT * FROM Users WHERE user_id IN (
-										SELECT friend_two_id FROM Friends_With WHERE friend_one_id = '{0}'
-									)
-								)
-								""".format(uid)
+	friends_of_friends_query = """SELECT user_id, first_name, last_name FROM Users WHERE user_id IN (SELECT user_id FROM Users WHERE user_id IN (SELECT friend_two_id FROM FRIENDS_WITH WHERE friend_one_id = '{0}'))""".format(uid)
 	cursor.execute(friends_of_friends_query)
 	rec_list = [] 
 	for tup in cursor.fetchall():
@@ -590,6 +582,21 @@ def list_friends(user_id):
 				"lastName": str(tup[2])
 			}
 		)
+
+	# if the friends list is empty then we will send them all possible people on the site 
+	if not rec_list:
+		friends_of_friends_query = """SELECT user_id, first_name, last_name FROM Users WHERE NOT user_id = '{0}'""".format(uid)
+		cursor.execute(friends_of_friends_query)
+		rec_list = [] 
+		for tup in cursor.fetchall():
+			rec_list.append(
+				{
+					"userId": int(tup[0]),
+					"firstName": str(tup[1]),
+					"lastName": str(tup[2])
+				}
+			)
+	
 	return {"err": None, "friends": friend_list, "suggestedFriends": rec_list }
 # end list friend code 
 
