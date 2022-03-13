@@ -42,34 +42,34 @@ class UserAlbumPage extends React.Component {
         previewImageCaption: '',
         previewTitle: '',
         fileList: [
-            {
-                uid: '-1',
-                name: 'Kookaburra1',
-                status: 'done',
-                url: 'https://natureconservancy-h.assetsadobe.com/is/image/content/dam/tnc/nature/en/photos/australia/Laughing-Kookaburra_Patrick-Rolands.jpg?crop=0,0,4000,2200&wid=4000&hei=2200&scl=1.0',
-                caption: 'Kookaburra on a perch.'
-            },
-            {
-                uid: '-2',
-                name: 'Kookaburra2',
-                status: 'done',
-                url: 'https://www.marylandzoo.org/wp-content/uploads/2017/08/kookabura_web-1024x683.jpg',
-                caption: 'Kookaburra on a perch.'
-            },
-            {
-                uid: '-3',
-                name: 'Kookaburra3',
-                status: 'done',
-                url: 'https://media.australian.museum/media/dd/images/laughing_kookaburra.6d35e2f.width-800.2088cd5.jpg',
-                caption: 'Kookaburra on a perch.'
-            },
-            {
-                uid: '-4',
-                name: 'Kookaburra4',
-                status: 'done',
-                url: 'https://www.equilibriumx.com/wp-content/uploads/2021/09/kokaburra-3-1.jpg',
-                caption: 'Kookaburra on a perch.'
-            },
+            // {
+            //     uid: '-1',
+            //     name: 'Kookaburra1',
+            //     status: 'done',
+            //     url: 'https://natureconservancy-h.assetsadobe.com/is/image/content/dam/tnc/nature/en/photos/australia/Laughing-Kookaburra_Patrick-Rolands.jpg?crop=0,0,4000,2200&wid=4000&hei=2200&scl=1.0',
+            //     caption: 'Kookaburra on a perch.'
+            // },
+            // {
+            //     uid: '-2',
+            //     name: 'Kookaburra2',
+            //     status: 'done',
+            //     url: 'https://www.marylandzoo.org/wp-content/uploads/2017/08/kookabura_web-1024x683.jpg',
+            //     caption: 'Kookaburra on a perch.'
+            // },
+            // {
+            //     uid: '-3',
+            //     name: 'Kookaburra3',
+            //     status: 'done',
+            //     url: 'https://media.australian.museum/media/dd/images/laughing_kookaburra.6d35e2f.width-800.2088cd5.jpg',
+            //     caption: 'Kookaburra on a perch.'
+            // },
+            // {
+            //     uid: '-4',
+            //     name: 'Kookaburra4',
+            //     status: 'done',
+            //     url: 'https://www.equilibriumx.com/wp-content/uploads/2021/09/kokaburra-3-1.jpg',
+            //     caption: 'Kookaburra on a perch.'
+            // },
         ],
     };
   }
@@ -114,15 +114,21 @@ class UserAlbumPage extends React.Component {
         this.setState({tags: event.target.value})
     }
 
-    uploadImage = event => {
+    uploadImage = async event => {
         // To do: action should be to upload image
         this.setState({image: event.file.name})
-
     }
 
   fetch = (params = {}) => {
     this.setState({ loading: true });
     // To do: Get photos for this album
+    // VIVIEN: Here's my attempt at this 
+    // endpoint is: /albumPhotos/<int:album_id> 
+    fetch(`http://127.0.0.1:5000/albumPhotos/${this.props.album.id}`)
+        .then(res => res.json())
+        .then(data => {
+            this.setState({fileList: data.photos});
+        });
   };
 
   render() {
@@ -137,7 +143,7 @@ class UserAlbumPage extends React.Component {
         <div>
             <PageHeader
                 className="site-page-header"
-                title='Album Name Here'
+                title={this.props.album.name} //'Album Name Here'
                 extra={[    
                     <Button key="1" type="primary" icon={<PlusOutlined/> } onClick={() => this.setState({modalOpen: true})}>
                         Add Picture
