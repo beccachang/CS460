@@ -31,12 +31,13 @@ class AlbumsList extends React.Component {
       title: 'Name',
       dataIndex: 'name',
       sorter: true,
-      render: (name, record) => <a onClick={() => this.props.viewAlbum(record)}>{name.first} {name.last}</a>,
+      render: (name, record) => <a onClick={() => this.props.viewAlbum(record)}>{name}</a>,
       width: '20%',
     },
     {
       title: 'Creation Date',
-      dataIndex: ['dob', 'date'],
+      dataIndex: ['date'],
+      render: (date) => new Date(date).toLocaleDateString(),
       width: '20%',
     },
   ];
@@ -70,13 +71,25 @@ class AlbumsList extends React.Component {
         redirect: 'follow'
     };
 
+    this.setState({ loading: true });
     fetch("http://127.0.0.1:5000/album/new", requestOptions)
     .then(result => { 
         var res = result.json(); 
         res.then( data => {
             if (data.err) { console.log(data.err); return; }
-            // TODO : maybe do something with this data
-            console.log(data.data);
+            // This gives us the new album - let's add it to the data 
+            var updatedData = this.state.fullData
+            updatedData.push(data.albums);
+            var params = {};
+            this.setState({
+              loading: false,
+              fullData: updatedData, 
+              data: updatedData,
+              pagination: {
+                ...params.pagination,
+                total: data.albums.length,
+              }
+            });
         });
     })
     .catch(error => console.log('error', error));
@@ -86,32 +99,33 @@ class AlbumsList extends React.Component {
 
   fetch = (params = {}) => {
     this.setState({ loading: true });
-    fetch(`https://randomuser.me/api?${qs.stringify(getRandomuserParams(params))}`)
+    
+    // VIVIEN: Listing actual albums - I assumed this is for the user
+    fetch(`http://127.0.0.1:5000/albums/${this.props.userID}`)
       .then(res => res.json())
       .then(data => {
-        this.setState({
-          loading: false,
-          data: data.results,
-          fullData: data.results,
-          pagination: {
-            ...params.pagination,
-            total: data.totalCount,
-            // 200 is mock data, you should read it from server
-            // total: data.totalCount,
-          },
+          if (data.err) { console.log(data.err); return; } 
+          this.setState({
+            loading: false,
+            data: data.albums,
+            fullData: data.albums,
+            pagination: {
+              ...params.pagination,
+              total: data.albums.length,
+            }
+          });
         });
-      });
   };
 
   filterTable = (value) => {
     value = value.toLowerCase();
     var filterData = this.state.fullData.filter(v => {
-      return v.dob.date.indexOf(value) > -1 ||  v.name.first.indexOf(value) > -1 || v.name.last.indexOf(value) > -1;
+      return v.date.indexOf(value) > -1 ||  v.name.indexOf(value) > -1;
     });
     this.setState({data: filterData});
   };
 
-  clearTable = (value) => {
+  clearFilter = (value) => {
     if (value == "") {
       this.setState({data: this.state.fullData});
     }
@@ -133,7 +147,7 @@ class AlbumsList extends React.Component {
                 title="Albums"
                 extra={[    
                     // To do: filter table data based on search term
-                    <Search placeholder="Search Albums" allowClear onChange={event => this.clearTable(event.target.value)} onSearch={str => this.filterTable(str)} style={{ width: 200 }} />,
+                    <Search placeholder="Search Albums" allowClear onChange={event => this.clearFilter(event.target.value)} onSearch={str => this.filterTable(str)} style={{ width: 200 }} />,
                     <Popover placement="bottomLeft" content={content} trigger="click">
                         <Button key="1" type="primary" icon={<PlusOutlined/>}>
                         New Album
@@ -144,7 +158,7 @@ class AlbumsList extends React.Component {
             />
             <Table
             columns={this.columns}
-            rowKey={record => record.login.uuid}
+            rowKey={record => record.id}
             dataSource={data}
             pagination={pagination}
             loading={loading}

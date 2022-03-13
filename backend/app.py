@@ -329,7 +329,7 @@ def new_album():
 	response: 
 		{
 			"err" None, 
-			"data": (album_id, name, date_of_creation)
+			"data": [{id: int, name: string, date: date}]
 		}
 	errors: 
 	
@@ -348,7 +348,7 @@ def new_album():
 	conn.commit()
 	cursor.execute('''SELECT album_id, name, date_of_creation FROM Album WHERE album_id = LAST_INSERT_ID()''')
 	data = cursor.fetchone()
-	return {"err": None, "data": {"album_id": data[0], "album_name": data[1], "date_of_creation": data[2]}}
+	return {"err": None, "albums": {"id": data[0], "name": data[1], "date": data[2]}}
 # end album creation code 
 
 # begin album list for user 
@@ -360,28 +360,30 @@ def list_user_albums(user_id):
 	{
 		albums: [
 			{
+				"id": id
 				"name": string, 
-				"Creation Date": string
+				"date": string
 			}
 		]
 	}
 	"""
 	cursor = conn.cursor()
-	cursor.execute('''SELECT name, date_of_creation FROM Album WHERE user_id = {0}'''.format(user_id))
+	cursor.execute('''SELECT album_id, name, date_of_creation FROM Album WHERE user_id = {0}'''.format(user_id))
 	data = cursor.fetchall()
 	albums = [] 
 	for tuple in data: 
 		albums.append(
 			{
-				"name": tuple[0],
-				"date": tuple[1]
+				"id": tuple[0],
+				"name": tuple[1],
+				"date": tuple[2]
 			}
 		)
 	return {"err": None, "albums": albums}
+# end album list for user 
 
 
-
-# begin album list code 
+# begin album photo list code 
 @app.route('/albumPhotos/<int:album_id>', methods=['GET'])
 def list_album_photos(album_id):
 	""" 
