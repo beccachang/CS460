@@ -457,7 +457,7 @@ def upload_file():
 		return {"err": "malformed request. missing fields", "data": None}
 	
 	cursor = conn.cursor()
-	cursor.execute('''INSERT INTO Photo (caption, album_id, data) VALUES (%s, %s, %s )''' ,(caption, album_id, photo_data))
+	cursor.execute('''INSERT INTO Photo (caption, album_id, data, likes) VALUES (%s, %s, %s, %s)''' ,(caption, album_id, photo_data, 0))
 	conn.commit()
 	
 	# NOTE: GOING TO HAVE TO ADD likes
@@ -469,13 +469,13 @@ def upload_file():
 			{
 				"photoId": int(tup[1]),
 				"caption": str(tup[0]), 
-				"data": str(base64.encodebytes(tup[2]).decode('ascii'))
+				"data": str(base64.decodebytes(tup[2]))
 				# likes must be added here 
 			}
 		)
 
 	# string encoding error here
-	return json.dumps({"err": None, "photos": album_photos})
+	return json.dumps({"err": None, "photos": album_res})
 #end photo uploading code
 
 #begin photo list for specific album code 

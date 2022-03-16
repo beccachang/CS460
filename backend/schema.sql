@@ -56,6 +56,7 @@ photo_id INTEGER AUTO_INCREMENT,
 caption VARCHAR(255),
 data LONGBLOB NOT NULL,
 album_id INTEGER NOT NULL,
+likes INTEGER,
 PRIMARY KEY (photo_id),
 FOREIGN KEY (album_id) REFERENCES Album(album_id)
 ON DELETE CASCADE);
