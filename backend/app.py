@@ -9,6 +9,7 @@
 # see links for further understanding
 ###################################################
 
+import base64
 import codecs
 import logging
 from turtle import home
@@ -19,9 +20,6 @@ import flask_login
 from flask_cors import CORS
 from dateutil import parser
 
-#for image uploading
-import os, base64
-
 # for albums and comments 
 import datetime
 import time
@@ -29,14 +27,7 @@ import time
 mysql = MySQL()
 
 app = Flask(__name__)
-CORS(app)
-app.config['CORS_HEADERS'] = 'Content-Type'
-cors = CORS(app, resource={
-    r"/*":{
-        "origins":"*"
-    }
-})
-
+CORS(app, support_credentials=True)
 
 app.secret_key = 'super secret string'  # Change this!
 
@@ -475,7 +466,7 @@ def upload_file():
 	album_res = [] 
 	# caption, photo_id, data
 	for tup in album_photos: 
-		data = tup[2].decode('utf-8')
+		data = tup[2].decode('ascii')
 		album_res.append(
 			{
 				"photoId": int(tup[1]),
@@ -485,6 +476,8 @@ def upload_file():
 			}
 		)
 	# string encoding error here
+	print("returning data")
+
 	return {"err": None, "photos": album_photos}
 #end photo uploading code
 

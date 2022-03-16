@@ -72,7 +72,7 @@ class AlbumsList extends React.Component {
     };
 
     this.setState({ loading: true });
-    fetch("http://127.0.0.1:5000/album/new", requestOptions)
+    fetch("/album/new", requestOptions)
     .then(result => { 
         var res = result.json(); 
         res.then( data => {
@@ -101,7 +101,7 @@ class AlbumsList extends React.Component {
     this.setState({ loading: true });
     
     // VIVIEN: Listing actual albums - I assumed this is for the user
-    fetch(`http://127.0.0.1:5000/albums/${this.props.userId}`)
+    fetch(`/albums/${this.props.userId}`)
       .then(res => res.json())
       .then(data => {
           if (data.err) { console.log(data.err); return; } 

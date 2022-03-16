@@ -70,7 +70,7 @@ class ExternalAlbumPage extends React.Component {
 
     // VIVIEN: Here's my shot at doing that :) 
     // the endpoint is /albums/<int:user_id> 
-    fetch(`http://127.0.0.1:5000/albums/${qs.stringify(this.props.userID)}`)
+    fetch(`/albums/${qs.stringify(this.props.userID)}`)
       .then(result => { 
         var res = result.json(); 
         res.then( data => {

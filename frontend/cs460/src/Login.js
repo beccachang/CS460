@@ -25,7 +25,7 @@ class Loginpage extends React.Component {
             redirect: 'follow'
         };
 
-        fetch("http://127.0.0.1:5000/login", requestOptions)
+        fetch("/login", requestOptions)
         .then(result => { 
             var res = result.json(); 
             res.then( data => {
@@ -56,7 +56,7 @@ class Loginpage extends React.Component {
             redirect: 'follow'
         };
 
-        fetch("http://127.0.0.1:5000/register", requestOptions)
+        fetch("/register", requestOptions)
         .then(result => { 
             var res = result.json(); 
             res.then( data => {

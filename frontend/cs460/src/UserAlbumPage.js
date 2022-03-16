@@ -138,7 +138,7 @@ class UserAlbumPage extends React.Component {
           redirect: 'follow'
       };
 
-      fetch("http://127.0.0.1:5000/newPhoto", requestOptions)
+      fetch("/newPhoto", requestOptions)
       .then(result => { 
           var res = result.json(); 
           console.log(result);
@@ -155,7 +155,7 @@ class UserAlbumPage extends React.Component {
     // To do: Get photos for this album
     // VIVIEN: Here's my attempt at this 
     // endpoint is: /albumPhotos/<int:album_id> 
-    fetch(`http://127.0.0.1:5000/albumPhotos/${this.props.album.id}`)
+    fetch(`/albumPhotos/${this.props.album.id}`)
         .then(res => res.json())
         .then(data => {
           console.log(data);
