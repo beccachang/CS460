@@ -42,7 +42,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = ''
+app.config['MYSQL_DATABASE_PASSWORD'] = 'cs460'
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 # app.before_request_funcs.setdefault(None, [decode_cookie])
@@ -475,7 +475,7 @@ def upload_file():
 	album_res = [] 
 	# caption, photo_id, data
 	for tup in album_photos: 
-		data = codecs.decode(tup[2])
+		data = tup[2].decode('utf-8')
 		album_res.append(
 			{
 				"photoId": int(tup[1]),
