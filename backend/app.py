@@ -469,12 +469,12 @@ def upload_file():
 			{
 				"photoId": int(tup[1]),
 				"caption": str(tup[0]), 
-				"data": tup[2].strip().decode()
+				"data": str(base64.encodebytes(tup[2]).decode('ascii'))
 				# likes must be added here 
 			}
 		)
 
-	# string encoding error here even though the type clearly says string 
+	# string encoding error here
 	return json.dumps({"err": None, "photos": album_photos})
 #end photo uploading code
 
