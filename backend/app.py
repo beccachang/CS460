@@ -247,7 +247,7 @@ def register_user():
 
 def getAlbumsPhotos(album_id):
 	cursor = conn.cursor()
-	cursor.execute("SELECT caption, photo_id, data FROM Photo WHERE album_id = '{0}'".format(album_id))
+	cursor.execute("SELECT caption, photo_id, data, likes FROM Photo WHERE album_id = '{0}'".format(album_id))
 	return cursor.fetchall() #NOTE list of tuples, [(imgdata, pid), ...]
 
 def getUserIdFromEmail(email):
@@ -401,7 +401,8 @@ def list_album_photos(album_id):
 			{
 				"photoId": tup[1],
 				"caption": str(tup[0]), 
-				"data": tup[2]
+				"data": str(base64.decodebtyes(tup[2])),
+				"likes": tup[3]
 				# likes must be added here 
 			}
 		)
@@ -469,40 +470,15 @@ def upload_file():
 			{
 				"photoId": int(tup[1]),
 				"caption": str(tup[0]), 
-				"data": str(base64.decodebytes(tup[2]))
+				"data": str(base64.decodebytes(tup[2])),
+				"likes": tup[3]
 				# likes must be added here 
 			}
 		)
 
 	# string encoding error here
-	return json.dumps({"err": None, "photos": album_res})
+	return {"err": None, "photos": album_res}
 #end photo uploading code
-
-#begin photo list for specific album code 
-@app.route('/photo/list', methods=['GET'])
-# @flask_login.login_required
-def list_photos():
-	""" 
-	list_photos():
-
-	query_params: album_id
-
-	response: 
-		{
-			"err": None, 
-			data: [(caption, photo_id, data)]
-		}
-
-	errors: {"err": "malformed request. missing query param", "data": None}
-	"""
-	try: 
-		album_id = request.args.get("album_id")
-	except:
-		return {"err": "malformed request. missing query param", "data": None}
-	
-	return {"err": None, "data": getAlbumsPhotos(album_id)}
-#end photo list for specific album code 
-
 
 # begin add friend code 
 @app.route('/addFriend', methods=['POST'])
