@@ -95,10 +95,10 @@ class UserAlbumPage extends React.Component {
         }
 
         this.setState({
-        previewImage: file.url || file.preview,
-        previewImageCaption: file.caption,
-        previewVisible: true,
-        previewTitle: file.name || file.url.substring(file.url.lastIndexOf('/') + 1),
+          previewImage: file.url || file.preview,
+          previewImageCaption: file.caption,
+          previewVisible: true,
+          previewTitle: file.name || file.url.substring(file.url.lastIndexOf('/') + 1),
         });
     };
 
@@ -111,12 +111,43 @@ class UserAlbumPage extends React.Component {
     }
 
     handleTagChange = event => {
-        this.setState({tags: event.target.value})
+        const list = event.target.value.split(" ");
+        this.setState({tags: list})
     }
 
     uploadImage = async event => {
         // To do: action should be to upload image
-        this.setState({image: event.file.name})
+        console.log(event)
+        //const binaryPhoto = getBase64(event.file.originFileObj);
+        const binaryPhoto = await getBase64(event.file);
+        this.setState({newPhoto: binaryPhoto})
+    }
+
+    addNewImage = (newPhoto, tags, caption) => {
+      var payload = JSON.stringify({
+          email: this.props.username,
+          albumId: this.props.album.id,
+          caption: caption,
+          data: newPhoto,
+          tags: tags   
+      })
+
+      var requestOptions = {
+          method: 'POST',
+          body: payload,
+          redirect: 'follow'
+      };
+
+      fetch("http://127.0.0.1:5000/newPhoto", requestOptions)
+      .then(result => { 
+          var res = result.json(); 
+          console.log(result);
+          res.then( data => {
+              if (data.err) { console.log(data.err); return; }
+              console.log(data);
+          });
+      })
+      .catch(error => console.log('error', error));
     }
 
   fetch = (params = {}) => {
@@ -127,12 +158,13 @@ class UserAlbumPage extends React.Component {
     fetch(`http://127.0.0.1:5000/albumPhotos/${this.props.album.id}`)
         .then(res => res.json())
         .then(data => {
-            this.setState({fileList: data.photos});
+          console.log(data);
+            //this.setState({fileList: data.photos});
         });
   };
 
   render() {
-    const { modalOpen, fileList, previewImage, previewImageCaption, previewTitle, previewVisible,  image, } = this.state;
+    const { modalOpen, fileList, previewImage, previewImageCaption, previewTitle, previewVisible,  image, newPhoto, tags, caption } = this.state;
     const uploadButton = (
         <div>
           <PlusOutlined />
@@ -150,11 +182,11 @@ class UserAlbumPage extends React.Component {
                     </Button>
                 ]}
             />
-            <Modal title="Add New Photo" visible={modalOpen} onCancel={() => this.setState({modalOpen: false})}>
-                <Upload onChange={event=>this.uploadImage(event)} listType="picture-card" maxCount={1}>{image ? null : uploadButton}</Upload>
+            <Modal title="Add New Photo" visible={modalOpen} onOk={ () => this.addNewImage(newPhoto, tags, caption)} onCancel={() => this.setState({modalOpen: false})}>
+                <Upload onChange={event=>this.uploadImage(event)} beforeUpload={file => {this.setState({file: file}); return false;}} action={null} listType="picture-card" maxCount={1}> {uploadButton}</Upload>
                 <TextArea showCount placeholder="Add a caption" maxLength={255} onChange={e => this.handleCaptionChange(e)}/>
                 {/* tags as a list of words separated by spaces */}
-                <TextArea showCount placeholder="Add tags" maxLength={255}/>
+                <TextArea showCount placeholder="Add tags" maxLength={255} onChange={ e => this.handleTagChange(e) }/>
             </Modal>
             <Upload
                 

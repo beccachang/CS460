@@ -16,35 +16,30 @@ class App extends React.Component {
     this.state = {
       isLoggedIn: false,
       username: null,
-      userID: null
+      userId: null
     };
   }
 
-  login = (username, userID) => {
-      // VIVIEN: I added userID to the state because it is needed in so many calls
-      this.setState({isLoggedIn: true, username: username, userID: userID}, function() {
-        window.history.pushState(null, "New Page Title", "/home");
-      });
+  login = (username, userId) => {
+      this.setState({isLoggedIn: true, username: username, userId: userId});
+      
   }
 
   render() {
-    const { isLoggedIn, username, userID } = this.state;
-
+    const { isLoggedIn, username, userId } = this.state;
     return (
         <Router>
           <div>
           <Routes>
-            <Route path="/" element={<Loginpage loggedIn={isLoggedIn} login={(username, userID) => this.login(username, userID)}/>}/>
-            {isLoggedIn ? 
-              <Route 
-                path="/home"
-                element={<Homepage username={username} userID={userID}/>}
-              /> : null}
             {!isLoggedIn ? 
               <Route 
-                path="/home"
-                element={<Loginpage login={this.login}/>}
-              /> : null}
+                path="/" 
+                element={<Loginpage loggedIn={isLoggedIn} login={(username, userId) => this.login(username, userId)}/>}/> : null}
+            {isLoggedIn ? 
+              <Route 
+                path="/"
+                element={<Homepage username={username} userId={userId}/>}
+              /> : null} 
           </Routes>
           </div>
         </Router>

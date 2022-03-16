@@ -104,7 +104,7 @@ class FriendsList extends React.Component {
 
     // VIVIEN: User's friends 
     // endpoint is /friends/<int:user_id>
-    fetch(`http://127.0.0.1:5000/friends/${this.props.userID}`)
+    fetch(`http://127.0.0.1:5000/friends/${this.props.userId}`)
     .then(res => res.json())
     .then(data => {
       // TODO: this needs to be integrated to the table
