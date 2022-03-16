@@ -9,6 +9,7 @@
 # see links for further understanding
 ###################################################
 
+import codecs
 import logging
 from turtle import home
 from typing import Type
@@ -41,7 +42,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'cs460'
+app.config['MYSQL_DATABASE_PASSWORD'] = ''
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 # app.before_request_funcs.setdefault(None, [decode_cookie])
@@ -458,11 +459,13 @@ def upload_file():
 	payload = request.get_json(force=True) 
 	try:
 		caption = payload["caption"]
-		album_id = payload["album_id"]
+		album_id = payload["albumId"]
 		photo_data = payload["data"]
-		tags = payload["Tags"]
-	except: 
+		tags = payload["tags"]
+	except Exception as ex: 
+		print(ex)
 		return {"err": "malformed request. missing fields", "data": None}
+	
 	cursor = conn.cursor()
 	cursor.execute('''INSERT INTO Photo (caption, album_id, data) VALUES (%s, %s, %s )''' ,(caption, album_id, photo_data))
 	conn.commit()
@@ -472,14 +475,16 @@ def upload_file():
 	album_res = [] 
 	# caption, photo_id, data
 	for tup in album_photos: 
+		data = codecs.decode(tup[2])
 		album_res.append(
 			{
-				"photoId": tup[1],
+				"photoId": int(tup[1]),
 				"caption": str(tup[0]), 
-				"data": tup[2]
+				"data": data
 				# likes must be added here 
 			}
 		)
+	# string encoding error here
 	return {"err": None, "photos": album_photos}
 #end photo uploading code
 
