@@ -10,8 +10,7 @@
 ###################################################
 
 import base64
-import codecs
-import logging
+import json
 from turtle import home
 from typing import Type
 from flask import Flask, request
@@ -466,19 +465,17 @@ def upload_file():
 	album_res = [] 
 	# caption, photo_id, data
 	for tup in album_photos: 
-		data = tup[2].decode('ascii')
 		album_res.append(
 			{
 				"photoId": int(tup[1]),
 				"caption": str(tup[0]), 
-				"data": data
+				"data": tup[2].strip().decode()
 				# likes must be added here 
 			}
 		)
-	# string encoding error here
-	print("returning data")
 
-	return {"err": None, "photos": album_photos}
+	# string encoding error here even though the type clearly says string 
+	return json.dumps({"err": None, "photos": album_photos})
 #end photo uploading code
 
 #begin photo list for specific album code 
