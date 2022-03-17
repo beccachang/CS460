@@ -1,18 +1,11 @@
 import React from 'react';
 import './index.css';
 import { Table, PageHeader, Button, Input, Popover } from 'antd';
-import qs from 'qs';
 import {
     PlusOutlined
 } from '@ant-design/icons';
 
 const {Search} = Input;
-
-const getRandomuserParams = params => ({
-  results: params.pagination.pageSize,
-  page: params.pagination.current,
-  ...params,
-});
 
 class AlbumsList extends React.Component {
   state = {

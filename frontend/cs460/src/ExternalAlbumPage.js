@@ -1,17 +1,21 @@
 import React from 'react';
 import './App.css';
-import { Table, PageHeader, Image, Input, Popover } from 'antd';
+import { PageHeader, Image, Input, Modal, Tooltip, Form, List, Button, Comment } from 'antd';
 import qs from 'qs';
 import {
-    PlusOutlined,
-    MinusOutlined
+    LikeOutlined
   } from '@ant-design/icons';
 
-const getRandomuserParams = params => ({
-  results: params.pagination.pageSize,
-  page: params.pagination.current,
-  ...params,
-});
+const { TextArea } = Input;
+
+function getBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+  });
+}
 
 class ExternalAlbumPage extends React.Component {
   constructor(props) {
@@ -40,7 +44,35 @@ class ExternalAlbumPage extends React.Component {
         'https://www.marylandzoo.org/wp-content/uploads/2017/08/kookabura_web-1024x683.jpg',
         'https://media.australian.museum/media/dd/images/laughing_kookaburra.6d35e2f.width-800.2088cd5.jpg',
         
-      ]
+      ],
+      previewVisible: false,
+      viewingImage: {
+        previewImage: null,
+        caption: "temp",
+        likes: 0,
+        newComment: "",
+          comments: [
+            {
+              author: 'Random User',
+              avatar: 'https://joeschmoe.io/api/v1/random',
+              content: (
+                <p>
+                  Cute!
+                </p>
+              ),
+            },
+            {
+              author: 'Random User',
+              avatar: 'https://joeschmoe.io/api/v1/random',
+              content: (
+                <p>
+                  What animal is this?
+                </p>
+              ),
+  
+            },
+          ]
+      }
     };
   }
   
@@ -64,13 +96,30 @@ class ExternalAlbumPage extends React.Component {
     this.setState({isFriend: !isFriend})
   }
 
+  handlePreview = async file => {
+    const { viewingImage } = this.state;
+    if (!file.url && !file.preview) {
+    file.preview = await getBase64(file.originFileObj);
+  }
+
+    this.setState({
+      viewingImage: {
+        ...viewingImage,
+        previewImage: file.url || file.preview,
+      },
+      previewVisible: true,
+    });
+  };
+
+  handleCancel = () => this.setState({ previewVisible: false })
+
   fetch = (params = {}) => {
     this.setState({ loading: true });
     // To do: Get albums associated with the user
 
     // VIVIEN: Here's my shot at doing that :) 
     // the endpoint is /albums/<int:user_id> 
-    fetch(`/albums/${qs.stringify(this.props.userID)}`)
+    fetch(`/albums/${qs.stringify(this.props.userId)}`)
       .then(result => { 
         var res = result.json(); 
         res.then( data => {
@@ -78,8 +127,7 @@ class ExternalAlbumPage extends React.Component {
             // TODO : maybe do something with this data
             console.log(data.data);
         });
-      });
-
+    });
 
     // fetch(`https://randomuser.me/api?${qs.stringify(getRandomuserParams(params))}`)
     //   .then(res => res.json())
@@ -98,7 +146,8 @@ class ExternalAlbumPage extends React.Component {
   };
 
   render() {
-    const {images} = this.state;
+    const { images, viewingImage, previewVisible } = this.state;
+    const { caption, likes, comments, newComment, previewImage } = viewingImage;
     const split = images.length/4;
     const column1 = images.slice(0, split).map((url) => 
         <Image
@@ -136,8 +185,55 @@ class ExternalAlbumPage extends React.Component {
                 <div class='column'> { column3 } </div>
                 <div class='column'> { column4 } </div>
             </div>
-
-            
+            <Modal
+                visible={previewVisible}
+                onCancel={this.handleCancel}
+            >
+              <img alt="example" style={{ width: '100%' }} src={previewImage} />
+              <Tooltip key="comment-basic-like" title="Like">
+                <span onClick={() => this.addLike(likes)}>
+                  <LikeOutlined/>
+                  <span className="comment-action">{likes}</span>
+                </span>
+              </Tooltip>
+              <p>{caption}</p>
+              <>
+                <Form.Item>
+                  <TextArea 
+                    rows={1} 
+                    onChange={ e => {
+                      this.setState({
+                        viewingImage: {
+                          ...viewingImage,
+                          newComment: e.target.value
+                        }
+                      })
+                    }} 
+                    value={newComment} 
+                  />
+                </Form.Item>
+                <Form.Item>
+                  <Button htmlType="submit" onClick={() => this.createNewComment()} type="primary">
+                    Add Comment
+                  </Button>
+                </Form.Item>
+              </>
+              <List
+                className="comment-list"
+                header={`${comments.length} replies`}
+                itemLayout="horizontal"
+                dataSource={comments}
+                renderItem={item => (
+                  <li>
+                    <Comment
+                      author={item.author}
+                      avatar={item.avatar}
+                      content={item.content}
+                    />
+                  </li>
+                )}
+              />
+            </Modal>
         </div>
       
     );

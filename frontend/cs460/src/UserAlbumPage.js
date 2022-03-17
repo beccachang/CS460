@@ -1,18 +1,12 @@
 import React from 'react';
-import './index.css';
-import { PageHeader, Button, Modal, Upload, Input, Form } from 'antd';
-import qs from 'qs';
+import './App.css';
+import { PageHeader, Button, Modal, Upload, Input, Form, Comment, List, Tooltip } from 'antd';
 import {
     PlusOutlined,
-    UploadOutlined
+    LikeOutlined,
   } from '@ant-design/icons';
 
 const { TextArea } = Input;
-const getRandomuserParams = params => ({
-  results: params.pagination.pageSize,
-  page: params.pagination.current,
-  ...params,
-});
 
 function getBase64(file) {
     return new Promise((resolve, reject) => {
@@ -21,7 +15,7 @@ function getBase64(file) {
       reader.onload = () => resolve(reader.result);
       reader.onerror = error => reject(error);
     });
-  }
+}
 
 class UserAlbumPage extends React.Component {
   constructor(props) {
@@ -41,36 +35,32 @@ class UserAlbumPage extends React.Component {
         previewImage: '',
         previewImageCaption: '',
         previewTitle: '',
-        fileList: [
-            // {
-            //     uid: '-1',
-            //     name: 'Kookaburra1',
-            //     status: 'done',
-            //     url: 'https://natureconservancy-h.assetsadobe.com/is/image/content/dam/tnc/nature/en/photos/australia/Laughing-Kookaburra_Patrick-Rolands.jpg?crop=0,0,4000,2200&wid=4000&hei=2200&scl=1.0',
-            //     caption: 'Kookaburra on a perch.'
-            // },
-            // {
-            //     uid: '-2',
-            //     name: 'Kookaburra2',
-            //     status: 'done',
-            //     url: 'https://www.marylandzoo.org/wp-content/uploads/2017/08/kookabura_web-1024x683.jpg',
-            //     caption: 'Kookaburra on a perch.'
-            // },
-            // {
-            //     uid: '-3',
-            //     name: 'Kookaburra3',
-            //     status: 'done',
-            //     url: 'https://media.australian.museum/media/dd/images/laughing_kookaburra.6d35e2f.width-800.2088cd5.jpg',
-            //     caption: 'Kookaburra on a perch.'
-            // },
-            // {
-            //     uid: '-4',
-            //     name: 'Kookaburra4',
-            //     status: 'done',
-            //     url: 'https://www.equilibriumx.com/wp-content/uploads/2021/09/kokaburra-3-1.jpg',
-            //     caption: 'Kookaburra on a perch.'
-            // },
-        ],
+        fileList: [],
+        viewingImage : {
+          likes: 5,
+          newComment: "",
+          comments: [
+            {
+              author: 'Random User',
+              avatar: 'https://joeschmoe.io/api/v1/random',
+              content: (
+                <p>
+                  Cute!
+                </p>
+              ),
+            },
+            {
+              author: 'Random User',
+              avatar: 'https://joeschmoe.io/api/v1/random',
+              content: (
+                <p>
+                  What animal is this?
+                </p>
+              ),
+  
+            },
+          ]
+        }
     };
   }
 
@@ -163,8 +153,47 @@ class UserAlbumPage extends React.Component {
         });
   };
 
+  fetchComments = (photoId) => {
+    // To do: get comments to display when modal opens 
+  }
+
+  addLike = likes => {
+    // To do: backend call to add likes
+    const { viewingImage } = this.state;
+    this.setState({
+      viewingImage: {
+        ...viewingImage,
+        likes: likes + 1,
+      }
+    })
+  }
+
+  createNewComment = () => {
+    const { viewingImage } = this.state;
+    var { comments, newComment } = viewingImage;
+    let updatedComments = comments.concat(
+      [{
+        author: 'Random User',
+        avatar: 'https://joeschmoe.io/api/v1/random',
+        content: (
+          <p>
+            {newComment}
+          </p>
+        ),
+    }]);
+    this.setState({
+      viewingImage: {
+        ...viewingImage,
+        newComment: "",
+        comments: updatedComments
+      }
+    })
+    // to do: backend call to add comment to db
+  }
+
   render() {
-    const { modalOpen, fileList, previewImage, previewImageCaption, previewTitle, previewVisible,  image, newPhoto, tags, caption } = this.state;
+    const { modalOpen, fileList, previewImage, previewImageCaption, previewTitle, previewVisible, newPhoto, tags, caption, viewingImage } = this.state;
+    const { likes, comments, newComment } = viewingImage;
     const uploadButton = (
         <div>
           <PlusOutlined />
@@ -203,8 +232,50 @@ class UserAlbumPage extends React.Component {
                 footer={null}
                 onCancel={this.handleCancel}
             >
-            <img alt="example" style={{ width: '100%' }} src={previewImage} />
-            <p>{previewImageCaption}</p>
+              <img alt="example" style={{ width: '100%' }} src={previewImage} />
+              <Tooltip key="comment-basic-like" title="Like">
+                <span onClick={() => this.addLike(likes)}>
+                  <LikeOutlined/>
+                  <span className="comment-action">{likes}</span>
+                </span>
+              </Tooltip>
+              <p>{previewImageCaption}</p>
+              <>
+                <Form.Item>
+                  <TextArea 
+                    rows={1} 
+                    onChange={ e => {
+                      this.setState({
+                        viewingImage: {
+                          ...viewingImage,
+                          newComment: e.target.value
+                        }
+                      })
+                    }} 
+                    value={newComment} 
+                  />
+                </Form.Item>
+                <Form.Item>
+                  <Button htmlType="submit" onClick={() => this.createNewComment()} type="primary">
+                    Add Comment
+                  </Button>
+                </Form.Item>
+              </>
+              <List
+                className="comment-list"
+                header={`${comments.length} replies`}
+                itemLayout="horizontal"
+                dataSource={comments}
+                renderItem={item => (
+                  <li>
+                    <Comment
+                      author={item.author}
+                      avatar={item.avatar}
+                      content={item.content}
+                    />
+                  </li>
+                )}
+              />
             </Modal>
         </div>
     );
