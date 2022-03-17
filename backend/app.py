@@ -399,14 +399,14 @@ def list_album_photos(album_id):
 	for tup in album_photos: 
 		album_res.append(
 			{
-				"photoId": tup[1],
+				"uid": tup[1],
 				"caption": str(tup[0]), 
-				"data": str(base64.decodebtyes(tup[2])),
+				"url": str(tup[2].decode()),
 				"likes": tup[3]
 				# likes must be added here 
 			}
 		)
-	return {"err": None, "photos": album_photos}
+	return {"err": None, "photos": album_res}
 # end of album list code 
 
 
