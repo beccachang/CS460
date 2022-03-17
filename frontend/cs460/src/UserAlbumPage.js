@@ -81,7 +81,7 @@ class UserAlbumPage extends React.Component {
 
     handlePreview = async file => {
         if (!file.url && !file.preview) {
-        file.preview = await getBase64(file.originFileObj);
+          file.preview = await getBase64(file.originFileObj);
         }
 
         this.setState({
@@ -148,7 +148,7 @@ class UserAlbumPage extends React.Component {
     fetch(`/albumPhotos/${this.props.album.id}`)
         .then(res => res.json())
         .then(data => {
-          console.log(data);
+          console.log("album imgs", data);
           this.setState({fileList: data.photos});
         });
   };

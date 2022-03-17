@@ -56,7 +56,7 @@ photo_id INTEGER AUTO_INCREMENT,
 caption VARCHAR(255),
 data LONGBLOB NOT NULL,
 album_id INTEGER NOT NULL,
-likes INTEGER,
+likes INTEGER DEFAULT 0,
 PRIMARY KEY (photo_id),
 FOREIGN KEY (album_id) REFERENCES Album(album_id)
 ON DELETE CASCADE);
@@ -75,7 +75,7 @@ Liked_Photo (
 
 CREATE TABLE 
 Comment (
-	user_id INTEGER, 
+	user_id INTEGER AUTO_INCREMENT, 
 	timestamp TIMESTAMP, 
 	text VARCHAR(255) NOT NULL, 
 	photo_id INTEGER, 

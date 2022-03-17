@@ -32,7 +32,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'cs460'
+app.config['MYSQL_DATABASE_PASSWORD'] = ''
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 # app.before_request_funcs.setdefault(None, [decode_cookie])
@@ -248,7 +248,22 @@ def register_user():
 def getAlbumsPhotos(album_id):
 	cursor = conn.cursor()
 	cursor.execute("SELECT caption, photo_id, data, likes FROM Photo WHERE album_id = '{0}'".format(album_id))
-	return cursor.fetchall() #NOTE list of tuples, [(imgdata, pid), ...]
+	
+	album_res = [] 
+	for tup in cursor.fetchall(): 
+		photo_id = int(tup[1])
+		cursor.execute("SELECT T.name FROM Tag T, Tagged_Photos TP WHERE T.tag_id = TP.tag_id AND TP.photo_id = {0}".format(photo_id))
+		album_res.append(
+			{
+				"photoId": photo_id,
+				"caption": str(tup[0]), 
+				"data": str(tup[2].decode()),
+				"likes": tup[3],
+				"tags": [t[0] for t in cursor.fetchall()]
+			}
+		)
+
+	return album_res
 
 def getUserIdFromEmail(email):
 	cursor = conn.cursor()
@@ -392,21 +407,7 @@ def list_album_photos(album_id):
 		]
 	}
 	"""
-	# NOTE: GOING TO HAVE TO ADD likes
-	album_photos = getAlbumsPhotos(album_id)
-	album_res = [] 
-	# caption, photo_id, data
-	for tup in album_photos: 
-		album_res.append(
-			{
-				"uid": tup[1],
-				"caption": str(tup[0]), 
-				"url": str(tup[2].decode()),
-				"likes": tup[3]
-				# likes must be added here 
-			}
-		)
-	return {"err": None, "photos": album_res}
+	return {"err": None, "photos": getAlbumsPhotos(album_id)}
 # end of album list code 
 
 
@@ -439,7 +440,8 @@ def upload_file():
 					photoId: STRING,
 					caption: STRING,
 					data: the picture in binary,
-					likes: INTEGER 
+					likes: INTEGER,
+					tags: [string]
 				}, 
 				...
 			]
@@ -458,27 +460,39 @@ def upload_file():
 		return {"err": "malformed request. missing fields", "data": None}
 	
 	cursor = conn.cursor()
-	cursor.execute('''INSERT INTO Photo (caption, album_id, data, likes) VALUES (%s, %s, %s, %s)''' ,(caption, album_id, photo_data, 0))
+	cursor.execute('''INSERT INTO Photo (caption, album_id, data) VALUES (%s, %s, %s)''' ,(caption, album_id, photo_data))
 	conn.commit()
-	
-	# NOTE: GOING TO HAVE TO ADD likes
-	album_photos = getAlbumsPhotos(album_id)
-	album_res = [] 
-	# caption, photo_id, data
-	for tup in album_photos: 
-		album_res.append(
-			{
-				"photoId": int(tup[1]),
-				"caption": str(tup[0]), 
-				"data": str(base64.decodebytes(tup[2])),
-				"likes": tup[3]
-				# likes must be added here 
-			}
-		)
 
-	# string encoding error here
-	return {"err": None, "photos": album_res}
+	# get the photo_id 
+	cursor.execute('''SELECT LAST_INSERT_ID() FROM Photo''') 
+	photo_id = cursor.fetchone()[0]
+
+	# now, we need to add the tags 
+	for tag in tags: 
+		# lower case 
+		tag = tag.lower()
+
+		# check if the tag exists 
+		cursor.execute("SELECT tag_id FROM Tag T WHERE T.name='{0}'".format(tag))
+		fetched_tag = cursor.fetchone() 
+		if fetched_tag: 
+			tag_id = fetched_tag[0]
+			cursor.execute('''UPDATE Tag SET quantity = quantity + 1''') 
+			cursor.execute('''INSERT INTO Tagged_Photos (tag_id, photo_id) VALUES (%s, %s)''', (tag_id, photo_id))
+		else:
+			cursor.execute('''INSERT INTO Tag (name) VALUES (%s)''', (tag))
+
+			# last inserted tag_id
+			cursor.execute('''SELECT LAST_INSERT_ID() FROM Tag''') 
+			tag_id = cursor.fetchone()[0]
+			cursor.execute('''INSERT INTO Tagged_Photos (tag_id, photo_id) VALUES (%s, %s)''', (tag_id, photo_id))
+
+		conn.commit()
+	
+	return {"err": None, "photos": getAlbumsPhotos(album_id)}
 #end photo uploading code
+
+### CODE FOR FRIENDS 
 
 # begin add friend code 
 @app.route('/addFriend', methods=['POST'])
@@ -572,6 +586,8 @@ def list_friends(user_id):
 # end list friend code 
 
 
+### CODE FOR COMMENTS 
+
 # function to get all comments 
 def get_all_photo_comments(photo_id):
 	cursor = conn.cursor()
@@ -650,6 +666,53 @@ def list_comments(photo_id):
 	return {"err": None, "comments": get_all_photo_comments(photo_id)}
 # end get comments code 
 
+
+### CODE FOR LIKES 
+
+def getPhotoLikes(photo_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT U.user_id, U.first_name, U.last_name, P.likes FROM Users U, Liked_Photo LP, Photo P WHERE LP.user_id = U.user_id AND LP.photo_id = P.photo_id AND LP.photo_id = {0}".format(photo_id))
+	likes = cursor.fetchall() 
+	num_likes = likes[0][3]
+
+	photo_likes = []
+	for likers in likes:
+		photo_likes.append(
+			{
+				"userID": int(likers[0]), 
+				"firstName": str(likers[1]),
+				"lastName": str(likers[0])
+			}
+		)
+
+	return {"users": photo_likes, "totalQnty": num_likes}
+	
+
+
+# begin like photo code 
+@app.route('/photos/like', methods=['POST'])
+def like_photo(): 
+	""""
+	like_photo():
+		adds a like. 
+		accepts {userID: , photoID: }
+		returns {err: null, likes: {"users": [], "totalQnty": int}} 
+	"""
+	payload = request.get_json(force=True)
+	try: 
+		user_id = payload["userID"]
+		photo_id = payload["photo_id"]
+	except Exception as ex:
+		print(ex)
+		return {"err": "invalid request. missing fields", "likes": None}
+	
+	cursor = conn.cursor() 
+	cursor.execute("INSERT INTO Liked_Photo (photo_id, user_id) VALUES (%s, %s)", (photo_id, user_id))
+	cursor.execute("UPDATE Photo SET likes = likes + 1 WHERE photo_id = {0}".format(photo_id))
+	conn.commit()
+
+	return {"err": None, "likes": getPhotoLikes(photo_id)}
+# end like photo code 
 
 if __name__ == "__main__":
 	#this is invoked when in the shell  you run
