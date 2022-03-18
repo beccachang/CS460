@@ -32,7 +32,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'cs460'
+app.config['MYSQL_DATABASE_PASSWORD'] = ''
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 # app.before_request_funcs.setdefault(None, [decode_cookie])
@@ -257,7 +257,7 @@ def getAlbumsPhotos(album_id):
 			{
 				"photoId": photo_id,
 				"caption": str(tup[0]), 
-				"data": str(tup[2].decode()),
+				"url": str(tup[2].decode()),
 				"likes": tup[3],
 				"tags": [t[0] for t in cursor.fetchall()]
 			}
@@ -591,19 +591,21 @@ def list_friends(user_id):
 # function to get all comments 
 def get_all_photo_comments(photo_id):
 	cursor = conn.cursor()
-	cursor.execute("SELECT (user_id, timestamp, text) FROM Comment WHERE photo_id = '{0}'".format(photo_id)) 
+	cursor.execute("SELECT U.user_id, U.first_name, U.last_name, C.timestamp, C.text FROM Comment C, Users U WHERE U.user_id = C.user_id AND photo_id = {0}".format(photo_id)) 
 
 	photo_comments = []
 	comments = cursor.fetchall()
 	for tup in comments: 
 		photo_comments.append(
 			{
-				"userId": tup[0],
-				"timestamp": tup[1],
-				"text": str(tup[2])
+				"userId": int(tup[0]),
+				"author": str(tup[1]) + " " + str(tup[2]),
+				"avatar": "https://joeschmoe.io/api/v1/random",
+				"timestamp": tup[3],
+				"content": str(tup[4])
 			}
 		)
-	return photo_comments
+	return {"err": None, "comments": photo_comments}
 
 # begin add comment code 
 
@@ -623,9 +625,7 @@ def new_comment():
 		{
 		comments: [
 				{
-					userId: int 
-					timestamp: timestamp 
-					text: string # the actual comment 
+					...
 				},
 				...
 			]
@@ -636,14 +636,15 @@ def new_comment():
 		photo_id = payload["photoId"]
 		user_id = payload["userId"]
 		comment = payload["comment"]
-		timestamp = time.now()
-	except:
+		timestamp = datetime.datetime.now()
+	except Exception as ex:
+		print(ex)
 		print("missing fields")
 		return {"err": "malformed request. missing fields", "comments": None}
 
 	cursor = conn.cursor()
 	cursor.execute('''INSERT INTO Comment (user_id, timestamp, text, photo_id) VALUES (%s,%s,%s,%s)''', (user_id, timestamp, comment, photo_id))
-	return {"err": None, "comments": get_all_photo_comments(photo_id)}
+	return get_all_photo_comments(photo_id)
 
 # begin list comment codes 
 @app.route('/comments/<int:photo_id>', methods=['GET'])
@@ -663,7 +664,7 @@ def list_comments(photo_id):
 			]
 		}
 	"""
-	return {"err": None, "comments": get_all_photo_comments(photo_id)}
+	return get_all_photo_comments(photo_id)
 # end get comments code 
 
 
@@ -690,7 +691,7 @@ def getPhotoLikes(photo_id):
 
 
 # begin like photo code 
-@app.route('/photos/like', methods=['POST'])
+@app.route('/newLike', methods=['POST'])
 def like_photo(): 
 	""""
 	like_photo():
@@ -700,8 +701,8 @@ def like_photo():
 	"""
 	payload = request.get_json(force=True)
 	try: 
-		user_id = payload["userID"]
-		photo_id = payload["photo_id"]
+		user_id = payload["userId"]
+		photo_id = payload["photoId"]
 	except Exception as ex:
 		print(ex)
 		return {"err": "invalid request. missing fields", "likes": None}

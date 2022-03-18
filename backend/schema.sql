@@ -67,7 +67,7 @@ Liked_Photo (
 	photo_id INTEGER, 
 	user_id INTEGER, 
 	PRIMARY KEY (photo_id, user_id), 
-	FOREIGN KEY (photo_id) REFERENCES Users(user_id) ON DELETE CASCADE, 
+	FOREIGN KEY (photo_id) REFERENCES Photo(photo_id) ON DELETE CASCADE, 
 	FOREIGN KEY (user_id) REFERENCES Users(user_id)
 );
 

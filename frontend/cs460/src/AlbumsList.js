@@ -71,13 +71,13 @@ class AlbumsList extends React.Component {
         res.then( data => {
             if (data.err) { console.log(data.err); return; }
             // This gives us the new album - let's add it to the data 
-            var updatedData = this.state.fullData
-            updatedData.push(data.albums);
+            let newData = this.state.fullData;
+            newData = [...newData, data.albums]
             var params = {};
             this.setState({
               loading: false,
-              fullData: updatedData, 
-              data: updatedData,
+              fullData: newData, 
+              data: newData,
               pagination: {
                 ...params.pagination,
                 total: data.albums.length,

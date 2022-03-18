@@ -37,29 +37,11 @@ class UserAlbumPage extends React.Component {
         previewTitle: '',
         fileList: [],
         viewingImage : {
-          likes: 5,
+          likes: 0,
+          userLikes: [], // array with user info about who liked the post 
           newComment: "",
-          comments: [
-            {
-              author: 'Random User',
-              avatar: 'https://joeschmoe.io/api/v1/random',
-              content: (
-                <p>
-                  Cute!
-                </p>
-              ),
-            },
-            {
-              author: 'Random User',
-              avatar: 'https://joeschmoe.io/api/v1/random',
-              content: (
-                <p>
-                  What animal is this?
-                </p>
-              ),
-  
-            },
-          ]
+          photoId: "",
+          comments: []
         }
     };
   }
@@ -84,15 +66,24 @@ class UserAlbumPage extends React.Component {
           file.preview = await getBase64(file.originFileObj);
         }
 
+        console.log(file);
+        const { viewingImage } = this.state;
         this.setState({
           previewImage: file.url || file.preview,
           previewImageCaption: file.caption,
           previewVisible: true,
           previewTitle: file.name || file.url.substring(file.url.lastIndexOf('/') + 1),
+          viewingImage: {
+            ...viewingImage,
+            likes: file.likes, 
+            photoId: file.photoId
+          }
         });
+        // fetch the comments
+        this.fetchComments(file.photoId);
     };
 
-    handleCancel = () => this.setState({ previewVisible: false })
+    handleCancel = () => this.setState({ previewVisible: false });
 
     handleChange = ({ fileList }) => this.setState({ fileList });
 
@@ -134,7 +125,8 @@ class UserAlbumPage extends React.Component {
           console.log(result);
           res.then( data => {
               if (data.err) { console.log(data.err); return; }
-              console.log(data);
+              this.setState({ loading: false, fileList: data.photos});
+
           });
       })
       .catch(error => console.log('error', error));
@@ -156,40 +148,79 @@ class UserAlbumPage extends React.Component {
 
   fetchComments = (photoId) => {
     // To do: get comments to display when modal opens 
+    // VIVIEN: Endpoint is /comments/<int:photo_id> 
+    fetch(`/comments/${photoId}`)
+      .then(res => res.json())
+      .then(data => {
+        console.log("comments", data);
+        // set comments here 
+        const { viewingImage } = this.state;
+        this.setState({
+          viewingImage: {
+            ...viewingImage,
+            comments: data.comments
+          }
+        });
+      }); 
   }
 
   addLike = likes => {
     // To do: backend call to add likes
-    const { viewingImage } = this.state;
-    this.setState({
-      viewingImage: {
-        ...viewingImage,
-        likes: likes + 1,
-      }
-    })
+    var payload = JSON.stringify({
+     photoId: this.state.viewingImage.photoId,
+      userId: this.props.userId
+    });
+
+    var requestOptions = {
+        method: 'POST',
+        body: payload,
+        redirect: 'follow'
+    };
+
+    fetch(`/newLike`, requestOptions)
+    .then(res => res.json())
+    .then(data => {
+      const { viewingImage } = this.state;
+      this.setState({
+        viewingImage: {
+          ...viewingImage,
+          likes: data.likes.totalQnty,
+          userLikes: data.likes.users 
+        }
+      })
+    });
   }
 
-  createNewComment = () => {
+  createNewComment = (photoID) => {
     const { viewingImage } = this.state;
     var { comments, newComment } = viewingImage;
-    let updatedComments = comments.concat(
-      [{
-        author: 'Random User',
-        avatar: 'https://joeschmoe.io/api/v1/random',
-        content: (
-          <p>
-            {newComment}
-          </p>
-        ),
-    }]);
-    this.setState({
-      viewingImage: {
-        ...viewingImage,
-        newComment: "",
-        comments: updatedComments
-      }
-    })
+
     // to do: backend call to add comment to db
+    var payload = JSON.stringify({
+      photoId: this.state.viewingImage.photoId,
+      userId: this.props.userId,
+      comment: newComment
+    });
+
+
+    var requestOptions = {
+        method: 'POST',
+        body: payload,
+        redirect: 'follow'
+    };
+
+    fetch(`/newComment`, requestOptions)
+    .then(res => res.json())
+    .then(data => {
+      this.setState({
+        viewingImage: {
+          ...viewingImage,
+          newComment: "",
+          comments: data.comments
+        }
+      })
+    });
+
   }
 
   render() {
@@ -219,7 +250,6 @@ class UserAlbumPage extends React.Component {
                 <TextArea showCount placeholder="Add tags" maxLength={255} onChange={ e => this.handleTagChange(e) }/>
             </Modal>
             <Upload
-                
                 listType="picture-card"
                 fileList={fileList}
                 onPreview={this.handlePreview}
