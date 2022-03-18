@@ -32,7 +32,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = ''
+app.config['MYSQL_DATABASE_PASSWORD'] = 'cs460'
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 # app.before_request_funcs.setdefault(None, [decode_cookie])
@@ -406,7 +406,7 @@ def list_album_photos(album_id):
 			...
 		]
 	}
-	"""
+	""" 
 	return {"err": None, "photos": getAlbumsPhotos(album_id)}
 # end of album list code 
 

@@ -149,7 +149,8 @@ class UserAlbumPage extends React.Component {
         .then(res => res.json())
         .then(data => {
           console.log("album imgs", data);
-          this.setState({fileList: data.photos});
+          if (data.err) { console.log(data.err); return; }
+          this.setState({ loading: false, fileList: data.photos});
         });
   };
 
