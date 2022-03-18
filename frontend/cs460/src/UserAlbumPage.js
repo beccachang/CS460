@@ -41,7 +41,8 @@ class UserAlbumPage extends React.Component {
           userLikes: [], // array with user info about who liked the post 
           newComment: "",
           photoId: "",
-          comments: []
+          comments: [],
+          photoTags: [],
         }
     };
   }
@@ -76,7 +77,8 @@ class UserAlbumPage extends React.Component {
           viewingImage: {
             ...viewingImage,
             likes: file.likes, 
-            photoId: file.photoId
+            photoId: file.photoId,
+            photoTags: file.tags
           }
         });
         // fetch the comments
@@ -97,9 +99,6 @@ class UserAlbumPage extends React.Component {
     }
 
     uploadImage = async event => {
-        // To do: action should be to upload image
-        console.log(event)
-        //const binaryPhoto = getBase64(event.file.originFileObj);
         const binaryPhoto = await getBase64(event.file);
         this.setState({newPhoto: binaryPhoto})
     }
@@ -125,7 +124,7 @@ class UserAlbumPage extends React.Component {
           console.log(result);
           res.then( data => {
               if (data.err) { console.log(data.err); return; }
-              this.setState({ loading: false, fileList: data.photos});
+              this.setState({ loading: false, fileList: data.photos, modalOpen: false});
 
           });
       })
@@ -165,7 +164,6 @@ class UserAlbumPage extends React.Component {
   }
 
   addLike = likes => {
-    // To do: backend call to add likes
     var payload = JSON.stringify({
      photoId: this.state.viewingImage.photoId,
       userId: this.props.userId
@@ -225,7 +223,7 @@ class UserAlbumPage extends React.Component {
 
   render() {
     const { modalOpen, fileList, previewImage, previewImageCaption, previewTitle, previewVisible, newPhoto, tags, caption, viewingImage } = this.state;
-    const { likes, comments, newComment } = viewingImage;
+    const { likes, comments, photoTags, newComment } = viewingImage;
     const uploadButton = (
         <div>
           <PlusOutlined />
@@ -271,6 +269,10 @@ class UserAlbumPage extends React.Component {
                 </span>
               </Tooltip>
               <p>{previewImageCaption}</p>
+              <div>
+                <p>{"Tags: "}</p>
+                {photoTags.map(tag => <a key={tag}>{tag}&nbsp;</a>)}
+              </div>
               <>
                 <Form.Item>
                   <TextArea 

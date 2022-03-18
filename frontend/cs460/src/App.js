@@ -15,7 +15,8 @@ class App extends React.Component {
     this.state = {
       isLoggedIn: false,
       username: null,
-      userId: null
+      userId: null,
+      continueWithoutLogin: false,
     };
   }
 
@@ -24,8 +25,12 @@ class App extends React.Component {
       
   }
 
+  noLogin = () => {
+    this.setState({isLoggedIn: true, continueWithoutLogin: true})
+  }
+
   render() {
-    const { isLoggedIn, username, userId } = this.state;
+    const { isLoggedIn, username, userId, continueWithoutLogin } = this.state;
     return (
         <Router>
           <div>
@@ -33,12 +38,13 @@ class App extends React.Component {
             {!isLoggedIn ? 
               <Route 
                 path="/" 
-                element={<Loginpage loggedIn={isLoggedIn} login={(username, userId) => this.login(username, userId)}/>}/> : null}
+                element={<Loginpage loggedIn={isLoggedIn} noLogin={this.noLogin} login={(username, userId) => this.login(username, userId)}/>}/> : null}
             {isLoggedIn ? 
               <Route 
                 path="/"
-                element={<Homepage username={username} userId={userId}/>}
+                element={<Homepage guest={continueWithoutLogin} username={username} userId={userId}/>}
               /> : null} 
+            
           </Routes>
           </div>
         </Router>

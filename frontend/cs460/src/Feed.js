@@ -10,7 +10,11 @@ class Feed extends React.Component {
   
     render() {
       return (
-          <div>Helllooooo</div>
+        <div>
+          <div>Suggested photos here</div>
+          <div>Top photos here</div>
+        </div>
+          
       );
     }
   }

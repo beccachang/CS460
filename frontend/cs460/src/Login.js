@@ -80,6 +80,9 @@ class Loginpage extends React.Component {
                 }}
                 onFinish={this.onFinishLogin}
             >
+                <Form.Item>
+                    <a onClick={this.props.noLogin}> Continue without logging in </a>
+                </Form.Item>
                 <Form.Item
                     name="username"
                     rules={[
