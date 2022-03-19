@@ -855,9 +855,10 @@ def suggested_photo(user_id):
 
 	cursor = conn.cursor()
 
-	if user_id == -1: 
+	top_5_tags = "SELECT TP.tag_id, COUNT(TP.tag_id) AS tagCnt FROM Tagged_Photos TP, Photo P, Album A WHERE TP.photo_id = P.photo_id AND A.album_id = P.album_id AND A.user_id = {0} GROUP BY TP.tag_id ORDER BY tagCnt LIMIT 5".format(user_id)				
+	if user_id == 0: 
 		# anonymous user 
-		pop_photos = "SELECT P.photo_id, P.caption, P.data, P.likes FROM Photo P GROUP BY P.likes DESC LIMIT 10"	
+		pop_photos = "SELECT P.photo_id, P.caption, P.data, P.likes FROM Photo P ORDER BY P.likes DESC"	
 		cursor.execute(pop_photos) 
 		res = cursor.fetchall()
 	else: 
@@ -866,7 +867,6 @@ def suggested_photo(user_id):
 		take the five most commonly used tags among the user's photos. Perform a disjunctive search through all the photos for these five tags. A
 		photo that contains all five tags should be ranked higher than another one that contains four of the tags and so on.
 		"""
-		top_5_tags = "SELECT TP.tag_id, COUNT(TP.tag_id) AS tagCnt FROM Tagged_Photos TP, Photo P, Album A WHERE TP.photo_id = P.photo_id AND A.album_id = P.album_id AND A.user_id = {0} GROUP BY TP.tag_id ORDER BY tagCnt LIMIT 5".format(user_id)				
 		all_photos_w_tags = "SELECT DISTINCT P1.photo_id, P1.caption, P1.data, P1.likes FROM (Photo P1, Album A1, Tagged_Photos TP1) INNER JOIN (" + top_5_tags + ") AS T1 ON T1.tag_id = TP1.tag_id WHERE P1.album_id = A1.album_id AND NOT A1.user_id = {0} AND P1.photo_id = TP1.photo_id".format(user_id)
 		cursor.execute(all_photos_w_tags)
 		res = cursor.fetchall()
