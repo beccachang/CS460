@@ -257,7 +257,7 @@ def getAlbumsPhotos(album_id):
 				"photoId": photo_id,
 				"caption": str(tup[0]), 
 				"url": str(tup[2].decode()),
-				"likes": tup[3],
+				"likes": getPhotoLikes(photo_id),
 				"tags": [t[0] for t in cursor.fetchall()]
 			}
 		)
@@ -673,7 +673,10 @@ def getPhotoLikes(photo_id):
 	cursor = conn.cursor()
 	cursor.execute("SELECT U.user_id, U.first_name, U.last_name, P.likes FROM Users U, Liked_Photo LP, Photo P WHERE LP.user_id = U.user_id AND LP.photo_id = P.photo_id AND LP.photo_id = {0}".format(photo_id))
 	likes = cursor.fetchall() 
-	num_likes = likes[0][3]
+	if likes: 
+		num_likes = likes[0][3]
+	else: 
+		num_likes = 0
 
 	photo_likes = []
 	for likers in likes:
@@ -681,7 +684,7 @@ def getPhotoLikes(photo_id):
 			{
 				"userID": int(likers[0]), 
 				"firstName": str(likers[1]),
-				"lastName": str(likers[0])
+				"lastName": str(likers[2])
 			}
 		)
 
@@ -817,7 +820,7 @@ def delete_album():
 	return {} 
 
 ### Code for deleting photo 
-@app.rout('deletePhoto', methods=["POST"])
+@app.route('/deletePhoto', methods=["POST"])
 def delete_photo():
 	payload = request.get_json(force=True)
 	photo_id = payload["photoId"]
@@ -825,7 +828,7 @@ def delete_photo():
 	cursor.execute("DELETE FROM Photo WHERE photo_id={0}".format(photo_id))
 	return {} 
 
-	
+
 if __name__ == "__main__":
 	#this is invoked when in the shell  you run
 	#$ python app.py
