@@ -26,13 +26,12 @@ import time
 mysql = MySQL()
 
 app = Flask(__name__)
-CORS(app, support_credentials=True)
 
 app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = ''
+app.config['MYSQL_DATABASE_PASSWORD'] = 'cs460'
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 # app.before_request_funcs.setdefault(None, [decode_cookie])
@@ -714,6 +713,89 @@ def like_photo():
 
 	return {"err": None, "likes": getPhotoLikes(photo_id)}
 # end like photo code 
+
+
+### CODE for search by user 
+@app.route('/searchUser', methods=['POST'])
+def search_user():
+	payload = request.get_json(force=True)
+	search_string = payload["search"]
+	search_string_comp = search_string.split(" ")
+
+	cursor = conn.cursor()
+	search_query = "SELECT user_id, first_name, last_name, email FROM Users U WHERE " 
+	for i in range(len(search_string_comp)):
+		if i != 0:
+			search_query += " OR "  
+		search_query += "U.first_name LIKE '%{0}%' OR U.last_name LIKE '%{0}%' OR U.email LIKE '%{0}%' ".format(search_string_comp[i])
+	
+	cursor.execute(search_query)
+	res = cursor.fetchall() 
+	people_res = [] 
+	for p in res: 
+		people_res.append(
+			{
+				"userId": int(p[0]),
+				"firstName": str(p[1]),
+				"lastName": str(p[2]),
+				"email": str(p[3])
+			}
+		)
+	return {"err": None, "users": people_res }
+
+### CODE for tag search 
+@app.route('/searchTags', methods=["POST"])
+def search_tags():
+	payload = request.get_json(force=True)
+	tags = payload['tags']
+
+	tag_query = ""
+	for i in range(len(tags)):
+		if i != 0:
+			tag_query += " UNION "  
+		tag_query += "SELECT T.name FROM Tag T WHERE T.name = '{0}'".format(tags[i])
+
+	query = "SELECT P.photo_id, P.caption, P.data, P.likes FROM Photo P, Tagged_Photos TP, Tag T WHERE P.photo_id = TP.photo_id AND TP.tag_id = T.tag_id AND T.name IN (" + tag_query + ")"
+	
+	cursor = conn.cursor()
+	cursor.execute(query)
+	res = cursor.fetchall()
+
+	tag_res = []
+	for r in res:
+		photo_id = int(r[0])
+		cursor.execute("SELECT T.name FROM Tag T, Tagged_Photos TP WHERE T.tag_id = TP.tag_id AND TP.photo_id = {0}".format(photo_id))		
+		
+		tag_res.append({
+			"photoId": photo_id,
+			"caption": str(r[1]), 
+			"url": str(r[2].decode()),
+			"likes": int(r[3]),
+			"tags": [t[0] for t in cursor.fetchall()]
+		})
+	return {"err": None, "photos": tag_res}
+
+### CODE FOR Comments 
+@app.route("/searchComments", methods=["POST"])
+def search_comments():
+	payload = request.get_json(force=True)
+	comment_str = payload['comment']
+	cursor = conn.cursor()
+
+	cursor.execute("SELECT U.user_id, U.first_name, U.last_name, C.text, C.timestamp FROM Users U, Comment C WHERE U.user_id = C.user_id AND C.text LIKE '%{0}%'".format(comment_str))
+	res = cursor.fetchall()
+	comment_res = [] 
+	for r in res: 
+		comment_res.append(
+			{
+				"userId": int(r[0]),
+				"author": str(r[1]) + " " + str(r[2]),
+				"avatar": "https://joeschmoe.io/api/v1/random",
+				"timestamp": r[4],
+				"content": str(r[3])
+			}
+		)
+	return {"err": None, "comments": comment_res}
 
 if __name__ == "__main__":
 	#this is invoked when in the shell  you run
