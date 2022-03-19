@@ -16,7 +16,6 @@ from typing import Type
 from flask import Flask, request
 from flaskext.mysql import MySQL
 import flask_login
-from flask_cors import CORS
 from dateutil import parser
 
 # for albums and comments 
@@ -31,7 +30,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'cs460'
+app.config['MYSQL_DATABASE_PASSWORD'] = ''
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 # app.before_request_funcs.setdefault(None, [decode_cookie])
@@ -768,12 +767,11 @@ def search_tags():
 	for r in res:
 		photo_id = int(r[0])
 		cursor.execute("SELECT T.name FROM Tag T, Tagged_Photos TP WHERE T.tag_id = TP.tag_id AND TP.photo_id = {0}".format(photo_id))		
-		
 		tag_res.append({
 			"photoId": photo_id,
 			"caption": str(r[1]), 
 			"url": str(r[2].decode()),
-			"likes": int(r[3]),
+			"likes": getPhotoLikes(photo_id),
 			"tags": [t[0] for t in cursor.fetchall()]
 		})
 	return {"err": None, "photos": tag_res}
@@ -828,6 +826,82 @@ def delete_photo():
 	cursor.execute("DELETE FROM Photo WHERE photo_id={0}".format(photo_id))
 	return {} 
 
+### Code for user score 
+@app.route('/topUsers', methods=["GET"])
+def top_users():
+	"""
+	the number of photos they have
+	uploaded plus the number of comments they have left for photos belonging to other users. 
+	"""
+	top_user_query = "SELECT U.user_id, U.first_name, U.last_name, COUNT(P.photo_id) + COUNT(C.user_id) AS score FROM Users U, Photo P, Album A, Comment C WHERE P.album_id = A.album_id AND U.user_id = A.user_id AND A.user_id = C.user_id AND C.photo_id NOT IN (SELECT P1.photo_id FROM Photo P1, Album A1 WHERE P1.album_id = A1.album_id AND A1.user_id = U.user_id) GROUP BY U.user_id ORDER BY score DESC LIMIT 10"
+	cursor = conn.cursor()
+	cursor.execute(top_user_query)
+	res = cursor.fetchall()
+	top_res = [] 
+	for r in res: 
+		top_res.append(
+			{
+				"userId": int(r[0]),
+				"firstName": str(r[1]),
+				"lastName": str(r[2]),
+				"score": int(r[3])
+			}
+		)
+	return {"err": None, "users": top_res}
+
+### Code for suggested photos 
+@app.route('/suggestedPhotos/<int:user_id>', methods=["GET"])
+def suggested_photo(user_id):
+
+	cursor = conn.cursor()
+
+	if user_id == -1: 
+		# anonymous user 
+		pop_photos = "SELECT P.photo_id, P.caption, P.data, P.likes FROM Photo P GROUP BY P.likes DESC LIMIT 10"	
+		cursor.execute(pop_photos) 
+		res = cursor.fetchall()
+	else: 
+		# a real user 	
+		"""
+		take the five most commonly used tags among the user's photos. Perform a disjunctive search through all the photos for these five tags. A
+		photo that contains all five tags should be ranked higher than another one that contains four of the tags and so on.
+		"""
+		top_5_tags = "SELECT TP.tag_id, COUNT(TP.tag_id) AS tagCnt FROM Tagged_Photos TP, Photo P, Album A WHERE TP.photo_id = P.photo_id AND A.album_id = P.album_id AND A.user_id = {0} GROUP BY TP.tag_id ORDER BY tagCnt LIMIT 5".format(user_id)
+		all_photos_w_tags = "SELECT P.photo_id, P.caption, P.data, P.likes FROM (Photo P1, Album A1, Tagged_Photos TP1) AS T1 INNER JOIN (" + top_5_tags + ") AS T2 ON T1.tag_id = T2.tag_id) WHERE P1.album_id = A1.album_id AND NOT A1.user_id = {0} AND P1.photo_id = TP1.tag_id".format(user_id)
+		print(all_photos_w_tags)
+		cursor.execute(all_photos_w_tags)
+		res = cursor.fetchall()
+
+		"""
+		top_5_tags = "SELECT TP.tag_id, COUNT(TP.tag_id) AS tagCnt FROM Tagged_Photos TP, Photo P, Album A WHERE TP.photo_id = P.photo_id AND A.album_id = P.album_id AND A.user_id = {0} GROUP BY T.tag_id ORDER BY tagCnt LIMIT 5".format(user_id)
+		all_photos_w_tags = "SELECT P.photo_id, P.caption, P.data, P.likes FROM Photo P1, Album A1, Tagged_Photos TP1 WHERE P1.album_id = A1.album_id AND NOT A1.user_id = {0} AND P1.photo_id = TP1.tag_id INNER JOIN (".format(user_id) + top_5_tags + ") ON TP.tag_id = TP1.tag_id"
+		"""
+	
+	top_res = []
+	for r in res:
+		photo_id = int(r[0])
+		cursor.execute("SELECT T.name FROM Tag T, Tagged_Photos TP WHERE T.tag_id = TP.tag_id AND TP.photo_id = {0}".format(photo_id))		
+		top_res.append({
+			"photoId": photo_id,
+			"caption": str(r[1]), 
+			"url": str(r[2].decode()),
+			"likes": getPhotoLikes(photo_id),
+			"tags": [t[0] for t in cursor.fetchall()]
+		})
+	return {"err": None, "photos": top_res}
+
+### Code for checking if someone is a friend 
+@app.route("/checkFriend", methods=["POST"])
+def check_friend():
+	payload = request.get_json(force=True)
+	user_id = payload["userId"]
+	friend_id = payload["friendUserId"]
+	cursor.execute("SELECT * FROM Friends_With WHERE (friend_one_id={0} OR friend_two_id={1}) AND (friend_one_id={1} OR friend_two_id={1})".format(user_id, friend_id))
+	res = cursor.fetchall()
+	if res:
+		return {"err": None, "Friends": True}
+	else:
+		return {"err": None, "Friends": False}
 
 if __name__ == "__main__":
 	#this is invoked when in the shell  you run
