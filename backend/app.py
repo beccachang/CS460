@@ -16,7 +16,6 @@ from typing import Type
 from flask import Flask, request
 from flaskext.mysql import MySQL
 import flask_login
-from flask_cors import CORS
 from dateutil import parser
 
 # for albums and comments 
@@ -257,7 +256,7 @@ def getAlbumsPhotos(album_id):
 				"photoId": photo_id,
 				"caption": str(tup[0]), 
 				"url": str(tup[2].decode()),
-				"likes": tup[3],
+				"likes": getPhotoLikes(photo_id),
 				"tags": [t[0] for t in cursor.fetchall()]
 			}
 		)
@@ -673,7 +672,10 @@ def getPhotoLikes(photo_id):
 	cursor = conn.cursor()
 	cursor.execute("SELECT U.user_id, U.first_name, U.last_name, P.likes FROM Users U, Liked_Photo LP, Photo P WHERE LP.user_id = U.user_id AND LP.photo_id = P.photo_id AND LP.photo_id = {0}".format(photo_id))
 	likes = cursor.fetchall() 
-	num_likes = likes[0][3]
+	if likes: 
+		num_likes = likes[0][3]
+	else: 
+		num_likes = 0
 
 	photo_likes = []
 	for likers in likes:
@@ -681,7 +683,7 @@ def getPhotoLikes(photo_id):
 			{
 				"userID": int(likers[0]), 
 				"firstName": str(likers[1]),
-				"lastName": str(likers[0])
+				"lastName": str(likers[2])
 			}
 		)
 
@@ -765,12 +767,11 @@ def search_tags():
 	for r in res:
 		photo_id = int(r[0])
 		cursor.execute("SELECT T.name FROM Tag T, Tagged_Photos TP WHERE T.tag_id = TP.tag_id AND TP.photo_id = {0}".format(photo_id))		
-		
 		tag_res.append({
 			"photoId": photo_id,
 			"caption": str(r[1]), 
 			"url": str(r[2].decode()),
-			"likes": int(r[3]),
+			"likes": getPhotoLikes(photo_id),
 			"tags": [t[0] for t in cursor.fetchall()]
 		})
 	return {"err": None, "photos": tag_res}
@@ -796,6 +797,116 @@ def search_comments():
 			}
 		)
 	return {"err": None, "comments": comment_res}
+
+### CODE for deleting a friend 
+@app.route("/deleteFriend", methods=["POST"])
+def delete_friend():
+	payload = request.get_json(force=True)
+	user_id = payload["userId"]
+	friend_id = payload["friendUserId"]
+	cursor = conn.cursor()
+	cursor.execute("DELETE FROM Friends_With WHERE (friend_one_id={0} OR friend_two_id={1}) AND (friend_one_id={1} OR friend_two_id={1})".format(user_id, friend_id))	
+	return {} 
+
+### Code for deleting album 
+@app.route('/deleteAlbum', methods=["POST"])
+def delete_album():
+	payload = request.get_json(force=True)
+	album_id = payload["albumId"]
+	cursor = conn.cursor()
+	cursor.execute("DELETE FROM Album WHERE album_id={0}".format(album_id))
+	return {} 
+
+### Code for deleting photo 
+@app.route('/deletePhoto', methods=["POST"])
+def delete_photo():
+	payload = request.get_json(force=True)
+	photo_id = payload["photoId"]
+	cursor = conn.cursor()
+	cursor.execute("DELETE FROM Photo WHERE photo_id={0}".format(photo_id))
+	return {} 
+
+### Code for user score 
+@app.route('/topUsers', methods=["GET"])
+def top_users():
+	"""
+	the number of photos they have
+	uploaded plus the number of comments they have left for photos belonging to other users. 
+	"""
+	top_user_query = "SELECT U.user_id, U.first_name, U.last_name, COUNT(P.photo_id) + COUNT(C.user_id) AS score FROM Users U, Photo P, Album A, Comment C WHERE P.album_id = A.album_id AND U.user_id = A.user_id AND A.user_id = C.user_id AND C.photo_id NOT IN (SELECT P1.photo_id FROM Photo P1, Album A1 WHERE P1.album_id = A1.album_id AND A1.user_id = U.user_id) GROUP BY U.user_id ORDER BY score DESC LIMIT 10"
+	cursor = conn.cursor()
+	cursor.execute(top_user_query)
+	res = cursor.fetchall()
+	top_res = [] 
+	for r in res: 
+		top_res.append(
+			{
+				"userId": int(r[0]),
+				"firstName": str(r[1]),
+				"lastName": str(r[2]),
+				"score": int(r[3])
+			}
+		)
+	return {"err": None, "users": top_res}
+
+### Code for suggested photos 
+@app.route('/suggestedPhotos/<int:user_id>', methods=["GET"])
+def suggested_photo(user_id):
+
+	cursor = conn.cursor()
+
+	top_5_tags = "SELECT TP.tag_id, COUNT(TP.tag_id) AS tagCnt FROM Tagged_Photos TP, Photo P, Album A WHERE TP.photo_id = P.photo_id AND A.album_id = P.album_id AND A.user_id = {0} GROUP BY TP.tag_id ORDER BY tagCnt LIMIT 5".format(user_id)				
+	if user_id == 0: 
+		# anonymous user 
+		pop_photos = "SELECT P.photo_id, P.caption, P.data, P.likes FROM Photo P ORDER BY P.likes DESC"	
+		cursor.execute(pop_photos) 
+		res = cursor.fetchall()
+	else: 
+		# a real user 	
+		"""
+		take the five most commonly used tags among the user's photos. Perform a disjunctive search through all the photos for these five tags. A
+		photo that contains all five tags should be ranked higher than another one that contains four of the tags and so on.
+		"""
+		all_photos_w_tags = "SELECT DISTINCT P1.photo_id, P1.caption, P1.data, P1.likes FROM (Photo P1, Album A1, Tagged_Photos TP1) INNER JOIN (" + top_5_tags + ") AS T1 ON T1.tag_id = TP1.tag_id WHERE P1.album_id = A1.album_id AND NOT A1.user_id = {0} AND P1.photo_id = TP1.photo_id".format(user_id)
+		cursor.execute(all_photos_w_tags)
+		res = cursor.fetchall()
+	
+	top_res = []
+	for r in res:
+		photo_id = int(r[0])
+		cursor.execute("SELECT T.tag_id, T.name FROM Tag T, Tagged_Photos TP WHERE T.tag_id = TP.tag_id AND TP.photo_id = {0}".format(photo_id))		
+		tag_res = cursor.fetchall()
+		tags = [t[1] for t in tag_res]
+		tag_ids = set([t[0] for t in tag_res])
+
+		# sort the tags by the number that appear 
+		cursor.execute(top_5_tags)
+		top_tags = set([t[0] for t in cursor.fetchall()])
+		num_tags = len(top_tags) - len(top_tags.difference(tag_ids))
+
+		top_res.append({
+			"photoId": photo_id,
+			"caption": str(r[1]), 
+			"url": str(r[2].decode()),
+			"likes": getPhotoLikes(photo_id),
+			"tags": tags,
+			"numTags": num_tags
+		})
+	# sorted(list_to_be_sorted, key=lambda d: d['name']) 
+	return {"err": None, "photos": sorted(top_res, key=lambda d: d["numTags"], reverse=True)}
+
+### Code for checking if someone is a friend 
+@app.route("/checkFriend", methods=["POST"])
+def check_friend():
+	payload = request.get_json(force=True)
+	user_id = payload["userId"]
+	friend_id = payload["friendUserId"]
+	cursor.execute("SELECT * FROM Friends_With WHERE (friend_one_id={0} OR friend_two_id={1}) AND (friend_one_id={1} OR friend_two_id={1})".format(user_id, friend_id))
+	res = cursor.fetchall()
+	if res:
+		return {"err": None, "Friends": True}
+	else:
+		return {"err": None, "Friends": False}
 
 if __name__ == "__main__":
 	#this is invoked when in the shell  you run
