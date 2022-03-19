@@ -30,7 +30,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = ''
+app.config['MYSQL_DATABASE_PASSWORD'] = 'cs460'
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 # app.before_request_funcs.setdefault(None, [decode_cookie])
@@ -867,7 +867,7 @@ def suggested_photo(user_id):
 		photo that contains all five tags should be ranked higher than another one that contains four of the tags and so on.
 		"""
 		top_5_tags = "SELECT TP.tag_id, COUNT(TP.tag_id) AS tagCnt FROM Tagged_Photos TP, Photo P, Album A WHERE TP.photo_id = P.photo_id AND A.album_id = P.album_id AND A.user_id = {0} GROUP BY TP.tag_id ORDER BY tagCnt LIMIT 5".format(user_id)				
-		all_photos_w_tags = "SELECT P1.photo_id, P1.caption, P1.data, P1.likes FROM (Photo P1, Album A1, Tagged_Photos TP1) INNER JOIN (" + top_5_tags + ") AS T1 ON T1.tag_id = TP1.tag_id WHERE P1.album_id = A1.album_id AND NOT A1.user_id = {0} AND P1.photo_id = TP1.photo_id".format(user_id)
+		all_photos_w_tags = "SELECT DISTINCT P1.photo_id, P1.caption, P1.data, P1.likes FROM (Photo P1, Album A1, Tagged_Photos TP1) INNER JOIN (" + top_5_tags + ") AS T1 ON T1.tag_id = TP1.tag_id WHERE P1.album_id = A1.album_id AND NOT A1.user_id = {0} AND P1.photo_id = TP1.photo_id".format(user_id)
 		cursor.execute(all_photos_w_tags)
 		res = cursor.fetchall()
 	
