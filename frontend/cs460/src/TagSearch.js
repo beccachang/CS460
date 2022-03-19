@@ -2,9 +2,9 @@ import React from 'react';
 import './index.css';
 import { Table, PageHeader, Input, Typography, Image, Modal, Tooltip, List, Comment, Form, Button, Switch, Upload } from 'antd';
 import {
-    LikeOutlined, 
-    SearchOutlined
-  } from '@ant-design/icons';
+  LikeOutlined,
+  SearchOutlined
+} from '@ant-design/icons';
 import qs from 'qs';
 
 const { Title } = Typography;
@@ -23,62 +23,49 @@ class TagSearch extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-        data: null,
-        pagination: {
-            current: 1,
-            pageSize: 10,
-        },
-        loading: false,
-        previewVisible: false,
-        previewTitle: null,
-        searchOnlyMyPhotos: false,
-        loading: false,
-        viewingImage: {
-            previewImage: null,
-            caption: "temp",
-            likes: 0,
-            newComment: "",
-              comments: [
-                {
-                  author: 'Random User',
-                  avatar: 'https://joeschmoe.io/api/v1/random',
-                  content: (
-                    <p>
-                      Cute!
-                    </p>
-                  ),
-                },
-                {
-                  author: 'Random User',
-                  avatar: 'https://joeschmoe.io/api/v1/random',
-                  content: (
-                    <p>
-                      What animal is this?
-                    </p>
-                  ),
-      
-                },
-              ]
-          }
+      albums: [],
+      pagination: {
+        current: 1,
+        pageSize: 10,
+      },
+      caption: null,
+      newPhoto: null,
+      tags: [],
+      loading: false,
+      modalOpen: false,
+      previewVisible: false,
+      previewImage: '',
+      previewImageCaption: '',
+      previewTitle: '',
+      fileList: [],
+      viewingImage: {
+        likes: 0,
+        userLikes: [], // array with user info about who liked the post 
+        newComment: "",
+        photoId: "",
+        comments: [],
+        photoTags: [],
+      }
     };
   }
- 
+
   personColumns = [
     {
       title: 'Name',
       dataIndex: 'name',
       sorter: true,
-      render: (name, record) => 
-      <a onClick={() => this.props.viewProfile({
-        firstName: name.first,
-        lastName: name.last,
-        email: record.email,
-        hometown: record.location.city,
-        dateOfBirth: record.dob,
-        gender: record.gender,
-        isFriend: true})}>
-        {name.first} {name.last}
-      </a>,
+      render: (name, record) =>
+        <a onClick={() => this.props.viewProfile({
+          firstName: name.first,
+          lastName: name.last,
+          email: record.email,
+          hometown: record.location.city,
+          dateOfBirth: record.dob,
+          gender: record.gender,
+          isFriend: true
+        })}>
+          {name.first} {name.last}
+        </a>,
       width: '20%',
     },
     {
@@ -99,13 +86,14 @@ class TagSearch extends React.Component {
     console.log(file);
     const { viewingImage } = this.state;
     this.setState({
-      
+
       previewImageCaption: file.caption,
       previewVisible: true,
       previewTitle: file.name || file.url.substring(file.url.lastIndexOf('/') + 1),
       viewingImage: {
         ...viewingImage,
-        likes: file.likes, 
+        likes: file.likes.totalQnty,
+        userLikes: file.likes.users,
         photoId: file.photoId,
         photoTags: file.tags,
         previewImage: file.url || file.preview,
@@ -124,10 +112,10 @@ class TagSearch extends React.Component {
             comments: data.comments
           }
         });
-      }); 
-};
+      });
+  };
 
-handleCancel = () => this.setState({ previewVisible: false });
+  handleCancel = () => this.setState({ previewVisible: false });
 
   fetchPhotos = (values) => {
     this.setState({ loading: true, images: [] });
@@ -139,18 +127,18 @@ handleCancel = () => this.setState({ previewVisible: false });
 
 
     var requestOptions = {
-        method: 'POST',
-        body: payload,
-        redirect: 'follow'
+      method: 'POST',
+      body: payload,
+      redirect: 'follow'
     };
 
     fetch(`/searchTags`, requestOptions)
-    .then(res => res.json())
-    .then(data => {
-      console.log(data);
-      // To do: filter if only users photos
-      this.setState({ loading: false, images: data.photos});
-    });
+      .then(res => res.json())
+      .then(data => {
+        console.log(data);
+        // To do: filter if only users photos
+        this.setState({ loading: false, images: data.photos });
+      });
 
   };
 
@@ -159,80 +147,80 @@ handleCancel = () => this.setState({ previewVisible: false });
     const { caption, likes, comments, newComment, previewImage } = viewingImage;
     const props = {
       listType: "picture-card",
-              fileList: images,
-              showUploadList:{
-                showRemoveIcon: false
-              }
+      fileList: images,
+      showUploadList: {
+        showRemoveIcon: false
+      }
     }
     return (
-        <div>
-            <PageHeader
-                className="site-page-header"
-                title="Tag Search"
-                extra={[
-                      <Switch
-                        checked={searchOnlyMyPhotos}
-                        checkedChildren="My Photos"
-                        unCheckedChildren="All Photos"
-                        onChange={() => this.setState({searchOnlyMyPhotos: !searchOnlyMyPhotos})}
-                      />,    
-                    <Search allowClear onSearch={values => this.fetchPhotos(values)} style={{ "padding-left": 10, width: 200 }} />,  
-                ]}
-            />
-            {images ? <Upload onPreview={this.handlePreview}
-              {...props}
-            /> : null}
-            <Modal
-                visible={previewVisible}
-                onCancel={this.handleCancel}
-            >
-              <img alt="example" style={{ width: '100%' }} src={previewImage} />
-              <Tooltip key="comment-basic-like" title="Like">
-                <span onClick={() => this.addLike(likes)}>
-                  <LikeOutlined/>
-                  <span className="comment-action">{likes}</span>
-                </span>
-              </Tooltip>
-              <p>{caption}</p>
-              <>
-                <Form.Item>
-                  <TextArea 
-                    rows={1} 
-                    onChange={ e => {
-                      this.setState({
-                        viewingImage: {
-                          ...viewingImage,
-                          newComment: e.target.value
-                        }
-                      })
-                    }} 
-                    value={newComment} 
-                  />
-                </Form.Item>
-                <Form.Item>
-                  <Button htmlType="submit" onClick={() => this.createNewComment()} type="primary">
-                    Add Comment
-                  </Button>
-                </Form.Item>
-              </>
-              <List
-                className="comment-list"
-                header={`${comments.length} replies`}
-                itemLayout="horizontal"
-                dataSource={comments}
-                renderItem={item => (
-                  <li>
-                    <Comment
-                      author={item.author}
-                      avatar={item.avatar}
-                      content={item.content}
-                    />
-                  </li>
-                )}
+      <div>
+        <PageHeader
+          className="site-page-header"
+          title="Tag Search"
+          extra={[
+            <Switch
+              checked={searchOnlyMyPhotos}
+              checkedChildren="My Photos"
+              unCheckedChildren="All Photos"
+              onChange={() => this.setState({ searchOnlyMyPhotos: !searchOnlyMyPhotos })}
+            />,
+            <Search allowClear onSearch={values => this.fetchPhotos(values)} style={{ "padding-left": 10, width: 200 }} />,
+          ]}
+        />
+        {images ? <Upload onPreview={this.handlePreview}
+          {...props}
+        /> : null}
+        <Modal
+          visible={previewVisible}
+          onCancel={this.handleCancel}
+        >
+          <img alt="example" style={{ width: '100%' }} src={previewImage} />
+          <Tooltip key="comment-basic-like" title="Like">
+            <span onClick={() => this.addLike(likes)}>
+              <LikeOutlined />
+              <span className="comment-action">{likes}</span>
+            </span>
+          </Tooltip>
+          <p>{caption}</p>
+          <>
+            <Form.Item>
+              <TextArea
+                rows={1}
+                onChange={e => {
+                  this.setState({
+                    viewingImage: {
+                      ...viewingImage,
+                      newComment: e.target.value
+                    }
+                  })
+                }}
+                value={newComment}
               />
-            </Modal>
-        </div>
-      
+            </Form.Item>
+            <Form.Item>
+              <Button htmlType="submit" onClick={() => this.createNewComment()} type="primary">
+                Add Comment
+              </Button>
+            </Form.Item>
+          </>
+          <List
+            className="comment-list"
+            header={`${comments.length} replies`}
+            itemLayout="horizontal"
+            dataSource={comments}
+            renderItem={item => (
+              <li>
+                <Comment
+                  author={item.author}
+                  avatar={item.avatar}
+                  content={item.content}
+                />
+              </li>
+            )}
+          />
+        </Modal>
+      </div>
+
     );
   }
 }
