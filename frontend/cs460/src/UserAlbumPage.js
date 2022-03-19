@@ -252,6 +252,7 @@ class UserAlbumPage extends React.Component {
                 fileList={fileList}
                 onPreview={this.handlePreview}
                 onChange={this.handleChange}
+                onDelete={console.log('delete file')}
             >
                 {null}
             </Upload>

@@ -4,7 +4,6 @@ import { Layout, Menu } from 'antd';
 import {
   BookOutlined,
   TeamOutlined,
-  UserOutlined,
   LogoutOutlined,
   HomeOutlined,
   CommentOutlined,
@@ -86,7 +85,7 @@ class Homepage extends React.Component {
               <Menu.Item icon={<TagOutlined />} key="5" onClick={()=>this.setState({showingPage:'tagSearch'})}>Tags</Menu.Item>
               <Menu.Item icon={<CommentOutlined /> } key="6" onClick={()=>this.setState({showingPage:'commentSearch'})}>Comments</Menu.Item>
             </SubMenu>
-            {guest ? null : <Menu.Item key="9" icon={<LogoutOutlined />}>
+            {guest ? null : <Menu.Item key="9" icon={<LogoutOutlined/>} onClick={this.props.logout}>
               Logout
             </Menu.Item>}
           </Menu>

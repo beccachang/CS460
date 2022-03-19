@@ -57,8 +57,44 @@ class Profile extends React.Component {
   };
 
   handleFriendStatusChange = isFriend => {
-    // To do: access database and add/remove friend based on isFriend status
-    this.setState({isFriend: !isFriend})
+    if (isFriend) {
+      var payload = JSON.stringify({
+        userId: this.props.userId,
+			  friendUserId: this.props.loadedProfile.userId
+      });
+  
+  
+      var requestOptions = {
+          method: 'POST',
+          body: payload,
+          redirect: 'follow'
+      };
+  
+      fetch(`/addFriend`, requestOptions)
+      .then(res => res.json())
+      .then(data => {
+        this.setState({isFriend: !isFriend})
+      });
+    } else {
+      var payload = JSON.stringify({
+        userId: this.props.userId,
+			  friendUserId: this.props.loadedProfile.userId
+      });
+  
+  
+      var requestOptions = {
+          method: 'POST',
+          body: payload,
+          redirect: 'follow'
+      };
+  
+      fetch(`/removeFriend`, requestOptions)
+      .then(res => res.json())
+      .then(data => {
+        this.setState({isFriend: !isFriend})
+      });
+    }
+    
   }
 
   fetch = (params = {}) => {

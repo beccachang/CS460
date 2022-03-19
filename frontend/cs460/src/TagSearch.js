@@ -1,6 +1,6 @@
 import React from 'react';
 import './index.css';
-import { Table, PageHeader, Input, Typography, Image, Modal, Tooltip, List, Comment, Form, Button } from 'antd';
+import { Table, PageHeader, Input, Typography, Image, Modal, Tooltip, List, Comment, Form, Button, Switch } from 'antd';
 import {
     LikeOutlined, 
     SearchOutlined
@@ -21,6 +21,7 @@ class TagSearch extends React.Component {
         },
         loading: false,
         previewVisible: false,
+        searchOnlyMyPhotos: false,
         viewingImage: {
             previewImage: null,
             caption: "temp",
@@ -94,15 +95,21 @@ class TagSearch extends React.Component {
   };
 
   render() {
-    const { images, viewingImage, previewVisible, loading } = this.state;
+    const { images, viewingImage, previewVisible, loading, searchOnlyMyPhotos } = this.state;
     const { caption, likes, comments, newComment, previewImage } = viewingImage;
     return (
         <div>
             <PageHeader
                 className="site-page-header"
                 title="Tag Search"
-                extra={[    
-                    <Search allowClear onSearch={() => console.log("hello")} style={{ width: 200 }} />,
+                extra={[
+                      <Switch
+                        checked={searchOnlyMyPhotos}
+                        checkedChildren="My Photos"
+                        unCheckedChildren="All Photos"
+                        onChange={() => this.setState({searchOnlyMyPhotos: !searchOnlyMyPhotos})}
+                      />,    
+                    <Search allowClear onSearch={() => console.log("hello")} style={{ width: 200 }} />,  
                 ]}
             />
             {images ? <List

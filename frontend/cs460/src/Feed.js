@@ -12,7 +12,7 @@ class Feed extends React.Component {
       return (
         <div>
           <div>Suggested photos here</div>
-          <div>Top photos here</div>
+          <div>Top users here</div>
         </div>
           
       );
