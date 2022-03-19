@@ -32,7 +32,10 @@ class Homepage extends React.Component {
       showingPage: 'home',
       collapsed: false,
       loadedProfile: null,
-      viewingAlbum: null
+      viewingAlbum: null,
+      externalUserId: null,
+      albumId: null,
+      albumName: null,
     };
   }
 
@@ -45,10 +48,10 @@ class Homepage extends React.Component {
     this.setState({showingPage: newPage});
   }
 
-  visitProfilePage = (account) => {
+  visitProfilePage = (userId) => {
     this.setState({
       showingPage: 'profile', 
-      loadedProfile: account
+      externalUserId: userId
     });
   }
 
@@ -59,12 +62,13 @@ class Homepage extends React.Component {
     });
   }
 
-  visitExternalAlbumPage = () => {
-    this.setState({showingPage: 'externalAlbum'})
+  visitExternalAlbumPage = (albumId, albumName) => {
+    console.log(albumId)
+    this.setState({showingPage: 'externalAlbum', albumId: albumId, albumName: albumName})
   }
 
   render() {
-    const { collapsed, showingPage, loadedProfile, viewingAlbum } = this.state;
+    const { collapsed, showingPage, loadedProfile, viewingAlbum, externalUserId, albumId, albumName } = this.state;
     const { guest } = this.props;
     return (
       <Layout style={{ minHeight: '100vh' }}>
@@ -95,12 +99,12 @@ class Homepage extends React.Component {
           <Content style={{ margin: '0 16px' }}>
             <div className="site-layout-background" style={{ padding: 24, minHeight: 360 }}>
               {showingPage === 'home' ? <Feed/> : null}
-              {showingPage === 'profile' ? <Profile username={this.props.username} userId={this.props.userId} profile={loadedProfile} visitExternalAlbumPage={() => this.visitExternalAlbumPage()}/> : null}
+              {showingPage === 'profile' ? <Profile guest={guest} username={this.props.username} userId={this.props.userId} profileUserId={externalUserId} visitExternalAlbumPage={(i, n) => this.visitExternalAlbumPage(i,n)}/> : null}
               {showingPage === 'album' ? <UserAlbumPage album={viewingAlbum} username={this.props.username} userId={this.props.userId}/> : null}
               {showingPage === 'albums' ? <AlbumsList username={this.props.username} userId={this.props.userId} viewAlbum={album => this.visitAlbumPage(album)}/> : null}
               {showingPage === 'friends' ? <FriendsList username={this.props.username} userId={this.props.userId} viewProfile={account => this.visitProfilePage(account)}/> : null}
-              {showingPage === 'externalAlbum' ? <ExternalAlbumPage username={this.props.username} userId={this.props.userId} /> : null}
-              {showingPage === 'peopleSearch' ? <PeopleSearch/> : null}
+              {showingPage === 'externalAlbum' ? <ExternalAlbumPage username={this.props.username} userId={this.props.userId} albumId={albumId} albumName={albumName} externalUserId={externalUserId}/> : null}
+              {showingPage === 'peopleSearch' ? <PeopleSearch viewProfile={e => this.visitProfilePage(e)}/> : null}
               {showingPage === 'commentSearch' ? <CommentSearch/> : null}
               {showingPage === 'tagSearch' ? <TagSearch/> : null}
             </div>

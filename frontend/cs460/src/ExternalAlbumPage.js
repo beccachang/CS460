@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import { PageHeader, Image, Input, Modal, Tooltip, Form, List, Button, Comment } from 'antd';
+import { PageHeader, Image, Input, Modal, Tooltip, Form, List, Button, Comment, Upload } from 'antd';
 import qs from 'qs';
 import {
     LikeOutlined
@@ -28,21 +28,21 @@ class ExternalAlbumPage extends React.Component {
       },
       loading: false,
       images: [
-        'https://natureconservancy-h.assetsadobe.com/is/image/content/dam/tnc/nature/en/photos/australia/Laughing-Kookaburra_Patrick-Rolands.jpg?crop=0,0,4000,2200&wid=4000&hei=2200&scl=1.0',
-        'https://www.marylandzoo.org/wp-content/uploads/2017/08/kookabura_web-1024x683.jpg',
-        'https://media.australian.museum/media/dd/images/laughing_kookaburra.6d35e2f.width-800.2088cd5.jpg',
-        'https://www.equilibriumx.com/wp-content/uploads/2021/09/kokaburra-3-1.jpg',
-        'https://natureconservancy-h.assetsadobe.com/is/image/content/dam/tnc/nature/en/photos/australia/Laughing-Kookaburra_Patrick-Rolands.jpg?crop=0,0,4000,2200&wid=4000&hei=2200&scl=1.0',
-        'https://www.marylandzoo.org/wp-content/uploads/2017/08/kookabura_web-1024x683.jpg',
-        'https://media.australian.museum/media/dd/images/laughing_kookaburra.6d35e2f.width-800.2088cd5.jpg',
-        'https://www.equilibriumx.com/wp-content/uploads/2021/09/kokaburra-3-1.jpg','https://www.equilibriumx.com/wp-content/uploads/2021/09/kokaburra-3-1.jpg',
-        'https://natureconservancy-h.assetsadobe.com/is/image/content/dam/tnc/nature/en/photos/australia/Laughing-Kookaburra_Patrick-Rolands.jpg?crop=0,0,4000,2200&wid=4000&hei=2200&scl=1.0',
-        'https://www.marylandzoo.org/wp-content/uploads/2017/08/kookabura_web-1024x683.jpg',
-        'https://media.australian.museum/media/dd/images/laughing_kookaburra.6d35e2f.width-800.2088cd5.jpg',
-        'https://www.equilibriumx.com/wp-content/uploads/2021/09/kokaburra-3-1.jpg',
-        'https://natureconservancy-h.assetsadobe.com/is/image/content/dam/tnc/nature/en/photos/australia/Laughing-Kookaburra_Patrick-Rolands.jpg?crop=0,0,4000,2200&wid=4000&hei=2200&scl=1.0',
-        'https://www.marylandzoo.org/wp-content/uploads/2017/08/kookabura_web-1024x683.jpg',
-        'https://media.australian.museum/media/dd/images/laughing_kookaburra.6d35e2f.width-800.2088cd5.jpg',
+        // 'https://natureconservancy-h.assetsadobe.com/is/image/content/dam/tnc/nature/en/photos/australia/Laughing-Kookaburra_Patrick-Rolands.jpg?crop=0,0,4000,2200&wid=4000&hei=2200&scl=1.0',
+        // 'https://www.marylandzoo.org/wp-content/uploads/2017/08/kookabura_web-1024x683.jpg',
+        // 'https://media.australian.museum/media/dd/images/laughing_kookaburra.6d35e2f.width-800.2088cd5.jpg',
+        // 'https://www.equilibriumx.com/wp-content/uploads/2021/09/kokaburra-3-1.jpg',
+        // 'https://natureconservancy-h.assetsadobe.com/is/image/content/dam/tnc/nature/en/photos/australia/Laughing-Kookaburra_Patrick-Rolands.jpg?crop=0,0,4000,2200&wid=4000&hei=2200&scl=1.0',
+        // 'https://www.marylandzoo.org/wp-content/uploads/2017/08/kookabura_web-1024x683.jpg',
+        // 'https://media.australian.museum/media/dd/images/laughing_kookaburra.6d35e2f.width-800.2088cd5.jpg',
+        // 'https://www.equilibriumx.com/wp-content/uploads/2021/09/kokaburra-3-1.jpg','https://www.equilibriumx.com/wp-content/uploads/2021/09/kokaburra-3-1.jpg',
+        // 'https://natureconservancy-h.assetsadobe.com/is/image/content/dam/tnc/nature/en/photos/australia/Laughing-Kookaburra_Patrick-Rolands.jpg?crop=0,0,4000,2200&wid=4000&hei=2200&scl=1.0',
+        // 'https://www.marylandzoo.org/wp-content/uploads/2017/08/kookabura_web-1024x683.jpg',
+        // 'https://media.australian.museum/media/dd/images/laughing_kookaburra.6d35e2f.width-800.2088cd5.jpg',
+        // 'https://www.equilibriumx.com/wp-content/uploads/2021/09/kokaburra-3-1.jpg',
+        // 'https://natureconservancy-h.assetsadobe.com/is/image/content/dam/tnc/nature/en/photos/australia/Laughing-Kookaburra_Patrick-Rolands.jpg?crop=0,0,4000,2200&wid=4000&hei=2200&scl=1.0',
+        // 'https://www.marylandzoo.org/wp-content/uploads/2017/08/kookabura_web-1024x683.jpg',
+        // 'https://media.australian.museum/media/dd/images/laughing_kookaburra.6d35e2f.width-800.2088cd5.jpg',
         
       ],
       previewVisible: false,
@@ -79,7 +79,7 @@ class ExternalAlbumPage extends React.Component {
 
   componentDidMount() {
     const { pagination } = this.state;
-    this.fetch({ pagination });
+    this.fetch(this.props.albumId);
   }
 
   handleTableChange = (pagination, filters, sorter) => {
@@ -101,6 +101,7 @@ class ExternalAlbumPage extends React.Component {
     if (!file.url && !file.preview) {
     file.preview = await getBase64(file.originFileObj);
   }
+  console.log(file)
 
     this.setState({
       viewingImage: {
@@ -109,86 +110,122 @@ class ExternalAlbumPage extends React.Component {
       },
       previewVisible: true,
     });
+    this.fetchComments(file.photoId);
   };
 
   handleCancel = () => this.setState({ previewVisible: false })
 
-  fetch = (params = {}) => {
+  fetch = (albumId) => {
     this.setState({ loading: true });
     // To do: Get albums associated with the user
-
-    // VIVIEN: Here's my shot at doing that :) 
-    // the endpoint is /albums/<int:user_id> 
-    fetch(`/albums/${qs.stringify(this.props.userId)}`)
+    fetch(`/albumPhotos/${albumId}`)
       .then(result => { 
         var res = result.json(); 
         res.then( data => {
             if (data.err) { console.log(data.err); return; }
             // TODO : maybe do something with this data
-            console.log(data.data);
+            this.setState({images: data.photos});
         });
     });
-
-    // fetch(`https://randomuser.me/api?${qs.stringify(getRandomuserParams(params))}`)
-    //   .then(res => res.json())
-    //   .then(data => {
-    //     this.setState({
-    //       loading: false,
-    //       albums: data.results,
-    //       pagination: {
-    //         ...params.pagination,
-    //         total: data.totalCount,
-    //         // 200 is mock data, you should read it from server
-    //         // total: data.totalCount,
-    //       },
-    //     });
-    //   });
   };
+
+  fetchComments = (photoId) => {
+    fetch(`/comments/${photoId}`)
+      .then(res => res.json())
+      .then(data => {
+        console.log("comments", data);
+        // set comments here 
+        const { viewingImage } = this.state;
+        this.setState({
+          viewingImage: {
+            ...viewingImage,
+            comments: data.comments
+          }
+        });
+      }); 
+  }
+
+  
+  addLike = likes => {
+    const {viewingImage} = this.state;
+    var payload = JSON.stringify({
+      photoId: viewingImage.photoId,
+      userId: this.props.userId
+    });
+
+    var requestOptions = {
+        method: 'POST',
+        body: payload,
+        redirect: 'follow'
+    };
+
+    fetch(`/newLike`, requestOptions)
+    .then(res => res.json())
+    .then(data => {
+      console.log(data);
+      const { viewingImage } = this.state;
+      this.setState({
+        viewingImage: {
+          ...viewingImage,
+          likes: data.likes.length,
+          userLikes: data.likes.users 
+        }
+      })
+    });
+  }
+
+  createNewComment = () => {
+    const { viewingImage } = this.state;
+    var { comments, newComment } = viewingImage;
+
+    // to do: backend call to add comment to db
+    var payload = JSON.stringify({
+      photoId: this.state.viewingImage.photoId,
+      userId: this.props.userId,
+      comment: newComment
+    });
+
+
+    var requestOptions = {
+        method: 'POST',
+        body: payload,
+        redirect: 'follow'
+    };
+
+    fetch(`/newComment`, requestOptions)
+    .then(res => res.json())
+    .then(data => {
+      this.setState({
+        viewingImage: {
+          ...viewingImage,
+          newComment: "",
+          comments: data.comments
+        }
+      })
+    });
+
+  }
+
 
   render() {
     const { images, viewingImage, previewVisible } = this.state;
     const { caption, likes, comments, newComment, previewImage } = viewingImage;
-    const split = images.length/4;
-    const column1 = images.slice(0, split).map((url) => 
-        <Image
-            key={url}
-            width={200}
-            src={url}
-            onClick={()=>console.log("open preview modal")}
-        />)
-    const column2 = images.slice(split, 2*split).map((url) => 
-        <Image
-            key={url}
-            width={200}
-            src={url}
-            onClick={()=>console.log("open preview modal")}
-        />)
-    const column3 = images.slice(2*split, 3*split).map((url) => 
-        <Image
-            key={url}
-            width={200}
-            src={url}
-            onClick={()=>console.log("open preview modal")}
-        />)
-    const column4 = images.slice(3*split, images.length).map((url) => 
-        <Image
-            key={url}
-            width={200}
-            src={url}
-            onClick={()=>console.log("open preview modal")}
-        />)
+    const props = {
+      listType: "picture-card",
+        fileList: images,
+        showUploadList:{
+        showRemoveIcon: false
+      }
+    }
     return (
         <div>
             <PageHeader
                 className="site-page-header"
-                title='External Album Page'
+                title={this.props.albumName}
             />
-            <div class='row'>
-                <div class='column'> { column1 } </div>
-                <div class='column'> { column2 } </div>
-                <div class='column'> { column3 } </div>
-                <div class='column'> { column4 } </div>
-            </div>
+            {images ? <Upload onPreview={this.handlePreview}
+              {...props}
+            /> : null}
             <Modal
                 visible={previewVisible}
                 onCancel={this.handleCancel}

@@ -23,28 +23,23 @@ class Profile extends React.Component {
         pageSize: 10,
       },
       loading: false,
-      isFriend: props.profile.isFriend
+      isFriend: false,
+      firstName: "",
+      lastName: "",
     };
   }
   
   columns = [
     {
       title: 'Albums',
-      dataIndex: 'name',
       sorter: true,
-      render: name => <a onClick={()=> this.props.visitExternalAlbumPage()}>{name.first} {name.last}</a>,
-      width: '20%',
-    },
-    {
-      title: 'Creation Date',
-      dataIndex: ['dob', 'date'],
+      render: record => <a onClick={() => this.props.visitExternalAlbumPage(record.id)}>{record.name}</a>,
       width: '20%',
     },
   ];
 
   componentDidMount() {
-    const { pagination } = this.state;
-    this.fetch({ pagination });
+    this.fetchProfile(this.props.profileUserId);
   }
 
   handleTableChange = (pagination, filters, sorter) => {
@@ -97,42 +92,42 @@ class Profile extends React.Component {
     
   }
 
-  fetch = (params = {}) => {
-    this.setState({ loading: true });
-    // To do: Get albums associated with the user
-    fetch(`https://randomuser.me/api?${qs.stringify(getRandomuserParams(params))}`)
+  fetchProfile = userId => {
+    this.setState({loading: true})
+    fetch(`/profile/${userId}`)
       .then(res => res.json())
       .then(data => {
+        console.log(data)
         this.setState({
-          loading: false,
-          albums: data.results,
-          pagination: {
-            ...params.pagination,
-            total: data.totalCount,
-            // 200 is mock data, you should read it from server
-            // total: data.totalCount,
-          },
-        });
+          firstName: data.firstName,
+          lastName: data.lastName,
+          albums: data.albums,
+        })
       });
-  };
 
+      fetch(`/albums/${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        this.setState({albums: data.albums, loading: false})
+      });
+
+  }
   render() {
-    const { albums, pagination, loading, isFriend } = this.state;
-    const {firstName, lastName} = this.props.profile;
+    const { albums, pagination, loading, isFriend, firstName, lastName } = this.state;
     return (
         <div>
             <PageHeader
                 className="site-page-header"
                 title={firstName + ' ' + lastName}
                 extra={[    
-                    <Button key="1" type="primary" icon={isFriend ? <MinusOutlined/> : <PlusOutlined/> } onClick={() => this.handleFriendStatusChange(isFriend)}>
+                    <Button disabled={this.props.guest} key="1" type="primary" icon={isFriend ? <MinusOutlined/> : <PlusOutlined/> } onClick={() => this.handleFriendStatusChange(isFriend)}>
                         {isFriend ? 'Remove Friend': 'Add Friend' }
                     </Button>
                 ]}
-            />
+            /> 
             <Table
             columns={this.columns}
-            rowKey={record => record.login.uuid}
+            rowKey={record => record.id}
             dataSource={albums}
             pagination={pagination}
             loading={loading}

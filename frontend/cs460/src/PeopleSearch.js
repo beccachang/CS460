@@ -24,39 +24,37 @@ class PeopleSearch extends React.Component {
       dataIndex: 'name',
       sorter: true,
       render: (name, record) => 
-      <a onClick={() => this.props.viewProfile({
-        firstName: name.first,
-        lastName: name.last,
-        email: record.email,
-        hometown: record.location.city,
-        dateOfBirth: record.dob,
-        gender: record.gender,
-        isFriend: true})}>
-        {name.first} {name.last}
+      <a onClick={() => this.props.viewProfile(record.userId)}>
+        {record.firstName} {record.lastName}
       </a>,
-      width: '20%',
-    },
-    {
-      title: 'Gender',
-      dataIndex: 'gender',
-      width: '20%',
+      width: '50%',
     },
     {
       title: 'Email',
       dataIndex: 'email',
+      with: '50%'
     },
   ];
 
-  fetch = (params = {}) => {
+  fetchUsers = (value) => {
     this.setState({ loading: true });
-    // TO DO: fetch people based on search query
-    // fetch(`/friends/${this.props.userId}`)
-    // .then(res => res.json())
-    // .then(data => {
-    //   // TODO: this needs to be integrated to the table
-    //   console.log(data);
-    //   this.setState({loading: false, data: data});
-    // })
+    var payload = JSON.stringify({
+      search: value,
+    });
+
+
+    var requestOptions = {
+        method: 'POST',
+        body: payload,
+        redirect: 'follow'
+    };
+
+    fetch(`/searchUser`, requestOptions)
+    .then(res => res.json())
+    .then(data => {
+      console.log(data);
+      this.setState({ loading: false, data: data.users});
+    });
 
   };
 
@@ -68,12 +66,12 @@ class PeopleSearch extends React.Component {
                 className="site-page-header"
                 title="People Search"
                 extra={[    
-                    <Search allowClear onSearch={() => console.log("hello")} style={{ width: 200 }} />,
+                    <Search allowClear onSearch={value => this.fetchUsers(value)} style={{ width: 200 }} />,
                 ]}
             />
             <Table
               columns={this.personColumns}
-              rowKey={record => record.login.uuid}
+              rowKey={record => record.userId}
               dataSource={data}
               pagination={pagination}
               loading={loading}

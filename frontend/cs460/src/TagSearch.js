@@ -1,6 +1,6 @@
 import React from 'react';
 import './index.css';
-import { Table, PageHeader, Input, Typography, Image, Modal, Tooltip, List, Comment, Form, Button, Switch } from 'antd';
+import { Table, PageHeader, Input, Typography, Image, Modal, Tooltip, List, Comment, Form, Button, Switch, Upload } from 'antd';
 import {
     LikeOutlined, 
     SearchOutlined
@@ -9,6 +9,15 @@ import qs from 'qs';
 
 const { Title } = Typography;
 const { Search, TextArea } = Input;
+
+function getBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+  });
+}
 
 class TagSearch extends React.Component {
   constructor(props) {
@@ -21,7 +30,9 @@ class TagSearch extends React.Component {
         },
         loading: false,
         previewVisible: false,
+        previewTitle: null,
         searchOnlyMyPhotos: false,
+        loading: false,
         viewingImage: {
             previewImage: null,
             caption: "temp",
@@ -81,22 +92,78 @@ class TagSearch extends React.Component {
     },
   ];
 
-  fetch = (params = {}) => {
+  handlePreview = async file => {
+    if (!file.url && !file.preview) {
+      file.preview = await getBase64(file.originFileObj);
+    }
+    console.log(file);
+    const { viewingImage } = this.state;
+    this.setState({
+      
+      previewImageCaption: file.caption,
+      previewVisible: true,
+      previewTitle: file.name || file.url.substring(file.url.lastIndexOf('/') + 1),
+      viewingImage: {
+        ...viewingImage,
+        likes: file.likes, 
+        photoId: file.photoId,
+        photoTags: file.tags,
+        previewImage: file.url || file.preview,
+      }
+    });
+    // fetch the comments
+    fetch(`/comments/${file.photoId}`)
+      .then(res => res.json())
+      .then(data => {
+        console.log("comments", data);
+        // set comments here 
+        const { viewingImage } = this.state;
+        this.setState({
+          viewingImage: {
+            ...viewingImage,
+            comments: data.comments
+          }
+        });
+      }); 
+};
+
+handleCancel = () => this.setState({ previewVisible: false });
+
+  fetchPhotos = (values) => {
+    this.setState({ loading: true, images: [] });
+    const tagsArray = values.split(' ');
     this.setState({ loading: true });
-    // TO DO: fetch tagged photos based on search query
-    // fetch(`/friends/${this.props.userId}`)
-    // .then(res => res.json())
-    // .then(data => {
-    //   // TODO: this needs to be integrated to the table
-    //   console.log(data);
-    //   this.setState({loading: false, data: data});
-    // })
+    var payload = JSON.stringify({
+      tags: tagsArray,
+    });
+
+
+    var requestOptions = {
+        method: 'POST',
+        body: payload,
+        redirect: 'follow'
+    };
+
+    fetch(`/searchTags`, requestOptions)
+    .then(res => res.json())
+    .then(data => {
+      console.log(data);
+      // To do: filter if only users photos
+      this.setState({ loading: false, images: data.photos});
+    });
 
   };
 
   render() {
     const { images, viewingImage, previewVisible, loading, searchOnlyMyPhotos } = this.state;
     const { caption, likes, comments, newComment, previewImage } = viewingImage;
+    const props = {
+      listType: "picture-card",
+              fileList: images,
+              showUploadList:{
+                showRemoveIcon: false
+              }
+    }
     return (
         <div>
             <PageHeader
@@ -109,25 +176,12 @@ class TagSearch extends React.Component {
                         unCheckedChildren="All Photos"
                         onChange={() => this.setState({searchOnlyMyPhotos: !searchOnlyMyPhotos})}
                       />,    
-                    <Search allowClear onSearch={() => console.log("hello")} style={{ width: 200 }} />,  
+                    <Search allowClear onSearch={values => this.fetchPhotos(values)} style={{ "padding-left": 10, width: 200 }} />,  
                 ]}
             />
-            {images ? <List
-                header={`${images.length} replies`}
-                itemLayout="horizontal"
-                dataSource={images}
-                renderItem={image => (
-                  <li>
-                    <Image
-                        key={image.url}
-                        width={400}
-                        src={image.url}
-                        onClick={()=>console.log("open preview modal")}
-                    />
-                  </li>
-                )}
-              /> : 
-              <List/>}
+            {images ? <Upload onPreview={this.handlePreview}
+              {...props}
+            /> : null}
             <Modal
                 visible={previewVisible}
                 onCancel={this.handleCancel}
