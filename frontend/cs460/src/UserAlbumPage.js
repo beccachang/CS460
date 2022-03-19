@@ -67,7 +67,6 @@ class UserAlbumPage extends React.Component {
           file.preview = await getBase64(file.originFileObj);
         }
 
-        console.log(file);
         const { viewingImage } = this.state;
         this.setState({
           previewImage: file.url || file.preview,
@@ -76,7 +75,8 @@ class UserAlbumPage extends React.Component {
           previewTitle: file.name || file.url.substring(file.url.lastIndexOf('/') + 1),
           viewingImage: {
             ...viewingImage,
-            likes: file.likes, 
+            likes: file.likes.totalQnty, 
+            userLikes: file.likes.users,
             photoId: file.photoId,
             photoTags: file.tags
           }

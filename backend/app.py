@@ -767,13 +767,18 @@ def search_tags():
 	for r in res:
 		photo_id = int(r[0])
 		cursor.execute("SELECT T.name FROM Tag T, Tagged_Photos TP WHERE T.tag_id = TP.tag_id AND TP.photo_id = {0}".format(photo_id))		
-		tag_res.append({
-			"photoId": photo_id,
-			"caption": str(r[1]), 
-			"url": str(r[2].decode()),
-			"likes": getPhotoLikes(photo_id),
-			"tags": [t[0] for t in cursor.fetchall()]
-		})
+		photo_tags = [t[0] for t in cursor.fetchall()]
+		
+		# just filter out photos that don't have all tags in 
+		if set(tags).intersection(photo_tags) == len(tags):
+			tag_res.append({
+				"photoId": photo_id,
+				"caption": str(r[1]), 
+				"url": str(r[2].decode()),
+				"likes": getPhotoLikes(photo_id),
+				"tags": photo_tags
+			})
+
 	return {"err": None, "photos": tag_res}
 
 ### CODE FOR Comments 
