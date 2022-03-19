@@ -31,7 +31,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'cs460'
+app.config['MYSQL_DATABASE_PASSWORD'] = ''
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 # app.before_request_funcs.setdefault(None, [decode_cookie])
@@ -797,6 +797,35 @@ def search_comments():
 		)
 	return {"err": None, "comments": comment_res}
 
+### CODE for deleting a friend 
+@app.route("/deleteFriend", methods=["POST"])
+def delete_friend():
+	payload = request.get_json(force=True)
+	user_id = payload["userId"]
+	friend_id = payload["friendUserId"]
+	cursor = conn.cursor()
+	cursor.execute("DELETE FROM Friends_With WHERE (friend_one_id={0} OR friend_two_id={1}) AND (friend_one_id={1} OR friend_two_id={1})".format(user_id, friend_id))	
+	return {} 
+
+### Code for deleting album 
+@app.route('/deleteAlbum', methods=["POST"])
+def delete_album():
+	payload = request.get_json(force=True)
+	album_id = payload["albumId"]
+	cursor = conn.cursor()
+	cursor.execute("DELETE FROM Album WHERE album_id={0}".format(album_id))
+	return {} 
+
+### Code for deleting photo 
+@app.rout('deletePhoto', methods=["POST"])
+def delete_photo():
+	payload = request.get_json(force=True)
+	photo_id = payload["photoId"]
+	cursor = conn.cursor()
+	cursor.execute("DELETE FROM Photo WHERE photo_id={0}".format(photo_id))
+	return {} 
+
+	
 if __name__ == "__main__":
 	#this is invoked when in the shell  you run
 	#$ python app.py
