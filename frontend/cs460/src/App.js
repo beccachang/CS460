@@ -29,6 +29,15 @@ class App extends React.Component {
     this.setState({isLoggedIn: true, continueWithoutLogin: true})
   }
 
+  logout = () => {
+    this.setState({
+      isLoggedIn: false,
+      username: null,
+      userId: null,
+      continueWithoutLogin: false,
+    })
+  }
+
   render() {
     const { isLoggedIn, username, userId, continueWithoutLogin } = this.state;
     return (
@@ -42,7 +51,7 @@ class App extends React.Component {
             {isLoggedIn ? 
               <Route 
                 path="/"
-                element={<Homepage guest={continueWithoutLogin} username={username} userId={userId}/>}
+                element={<Homepage guest={continueWithoutLogin} username={username} userId={userId} logout={this.logout}/>}
               /> : null} 
             
           </Routes>

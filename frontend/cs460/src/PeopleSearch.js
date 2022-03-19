@@ -3,7 +3,6 @@ import './index.css';
 import { Table, PageHeader, Input, Typography } from 'antd';
 import qs from 'qs';
 
-const { Title } = Typography;
 const {Search} = Input;
 
 class PeopleSearch extends React.Component {

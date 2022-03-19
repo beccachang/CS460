@@ -2,7 +2,8 @@ import React from 'react';
 import './index.css';
 import { Table, PageHeader, Button, Input, Popover } from 'antd';
 import {
-    PlusOutlined
+    PlusOutlined,
+    DeleteOutlined
 } from '@ant-design/icons';
 
 const {Search} = Input;
@@ -33,6 +34,11 @@ class AlbumsList extends React.Component {
       render: (date) => new Date(date).toLocaleDateString(),
       width: '20%',
     },
+    {
+      title: 'Actions',
+      render: (record) => <DeleteOutlined onClick={console.log('delete album here')}/>,
+      width: '20%'
+    }
   ];
 
   componentDidMount() {
