@@ -154,24 +154,28 @@ class ExternalAlbumPage extends React.Component {
             key={url}
             width={200}
             src={url}
+            onClick={()=>console.log("open preview modal")}
         />)
     const column2 = images.slice(split, 2*split).map((url) => 
         <Image
             key={url}
             width={200}
             src={url}
+            onClick={()=>console.log("open preview modal")}
         />)
     const column3 = images.slice(2*split, 3*split).map((url) => 
         <Image
             key={url}
             width={200}
             src={url}
+            onClick={()=>console.log("open preview modal")}
         />)
     const column4 = images.slice(3*split, images.length).map((url) => 
         <Image
             key={url}
             width={200}
             src={url}
+            onClick={()=>console.log("open preview modal")}
         />)
     return (
         <div>
