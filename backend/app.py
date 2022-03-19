@@ -41,18 +41,19 @@ mysql.init_app(app)
 login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
 
-conn = mysql.connect()
-cursor = conn.cursor()
-cursor.execute("SELECT email from Users")
-users = cursor.fetchall()
+# conn = mysql.connect()
+# cursor = conn.cursor()
+# cursor.execute("SELECT email from Users")
+# users = cursor.fetchall()
 
 def getUserList():
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute("SELECT email from Users")
 	return cursor.fetchall()
 
 def getUserFromEmail(email):
-	print(email)
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute("SELECT user_id FROM Users WHERE email = '{0}'".format(email))
 	return cursor.fetchone()[0]
@@ -69,7 +70,6 @@ def user_loader(email):
 	user.id = email
 	return user
 
-# WTF IS THIS lol
 @login_manager.request_loader
 def request_loader(request):
 	users = getUserList()
@@ -126,6 +126,7 @@ def login():
 		given_password = payload['password']
 	except: 
 		return {"err": "malformed request. missing fields", "profile": None}
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	# check if email is registered
 	if cursor.execute("SELECT password, first_name, last_name, email, gender, hometown, date_of_birth, user_id FROM Users WHERE email = '{0}'".format(email)):
@@ -217,6 +218,7 @@ def register_user():
 		print(ex)
 		print("couldn't find all tokens") #this prints to shell, end users will not see this (all print statements go to shell)
 		return {"err": "missing fields", "profile": None}
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	test = isEmailUnique(email)
 	if test:
@@ -244,6 +246,7 @@ def register_user():
 
 
 def getAlbumsPhotos(album_id):
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute("SELECT caption, photo_id, data, likes FROM Photo WHERE album_id = '{0}'".format(album_id))
 	
@@ -264,12 +267,14 @@ def getAlbumsPhotos(album_id):
 	return album_res
 
 def getUserIdFromEmail(email):
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute("SELECT user_id  FROM Users WHERE email = '{0}'".format(email))
 	return cursor.fetchone()[0]
 
 def isEmailUnique(email):
 	#use this to check if a email has already been registered
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	if cursor.execute("SELECT email  FROM Users WHERE email = '{0}'".format(email)):
 		#this means there are greater than zero entries with that email
@@ -300,6 +305,7 @@ def get_profile(user_id):
 	}
 	"""
 	uid = user_id
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	# user info 
 	cursor.execute("SELECT user_id, first_name, last_name FROM Users WHERE user_id = '{0}'".format(uid))
@@ -341,6 +347,7 @@ def new_album():
 	"""
 	payload = request.get_json(force=True) 
 	date_of_creation = datetime.date.today()
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	try:
 		name = payload["name"]
@@ -371,6 +378,7 @@ def list_user_albums(user_id):
 		]
 	}
 	"""
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute('''SELECT album_id, name, date_of_creation FROM Album WHERE user_id = {0}'''.format(user_id))
 	data = cursor.fetchall()
@@ -457,6 +465,7 @@ def upload_file():
 		print(ex)
 		return {"err": "malformed request. missing fields", "data": None}
 	
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute('''INSERT INTO Photo (caption, album_id, data) VALUES (%s, %s, %s)''' ,(caption, album_id, photo_data))
 	conn.commit()
@@ -521,6 +530,7 @@ def add_friend():
 		print("missing params")
 		return {"err": "malformed request. missing fields", "data": None}
 
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute('''INSERT INTO Friends_With (uid, friend_id) VALUES (%s, %s)''' ,(user_id, friend_id))
 	conn.commit()
@@ -541,6 +551,8 @@ def list_friends(user_id):
 		}
 	"""	
 	uid = user_id
+
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute("SELECT user_id, first_name, last_name FROM Users WHERE user_id IN (SELECT friend_two_id FROM FRIENDS_WITH WHERE friend_one_id = '{0}')".format(uid))
 	# the current friends 
@@ -588,6 +600,7 @@ def list_friends(user_id):
 
 # function to get all comments 
 def get_all_photo_comments(photo_id):
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute("SELECT U.user_id, U.first_name, U.last_name, C.timestamp, C.text FROM Comment C, Users U WHERE U.user_id = C.user_id AND photo_id = {0}".format(photo_id)) 
 
@@ -640,6 +653,7 @@ def new_comment():
 		print("missing fields")
 		return {"err": "malformed request. missing fields", "comments": None}
 
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute('''INSERT INTO Comment (user_id, timestamp, text, photo_id) VALUES (%s,%s,%s,%s)''', (user_id, timestamp, comment, photo_id))
 	return get_all_photo_comments(photo_id)
@@ -669,6 +683,7 @@ def list_comments(photo_id):
 ### CODE FOR LIKES 
 
 def getPhotoLikes(photo_id):
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute("SELECT U.user_id, U.first_name, U.last_name, P.likes FROM Users U, Liked_Photo LP, Photo P WHERE LP.user_id = U.user_id AND LP.photo_id = P.photo_id AND LP.photo_id = {0}".format(photo_id))
 	likes = cursor.fetchall() 
@@ -707,7 +722,8 @@ def like_photo():
 	except Exception as ex:
 		print(ex)
 		return {"err": "invalid request. missing fields", "likes": None}
-	
+
+	conn = mysql.connect()
 	cursor = conn.cursor() 
 	cursor.execute("INSERT INTO Liked_Photo (photo_id, user_id) VALUES (%s, %s)", (photo_id, user_id))
 	cursor.execute("UPDATE Photo SET likes = likes + 1 WHERE photo_id = {0}".format(photo_id))
@@ -724,6 +740,7 @@ def search_user():
 	search_string = payload["search"]
 	search_string_comp = search_string.split(" ")
 
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	search_query = "SELECT user_id, first_name, last_name, email FROM Users U WHERE " 
 	for i in range(len(search_string_comp)):
@@ -759,6 +776,7 @@ def search_tags():
 
 	query = "SELECT P.photo_id, P.caption, P.data, P.likes FROM Photo P, Tagged_Photos TP, Tag T WHERE P.photo_id = TP.photo_id AND TP.tag_id = T.tag_id AND T.name IN (" + tag_query + ")"
 	
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute(query)
 	res = cursor.fetchall()
@@ -770,7 +788,7 @@ def search_tags():
 		photo_tags = [t[0] for t in cursor.fetchall()]
 		
 		# just filter out photos that don't have all tags in 
-		if set(tags).intersection(photo_tags) == len(tags):
+		if len(set(tags).intersection(photo_tags)) == len(tags):
 			tag_res.append({
 				"photoId": photo_id,
 				"caption": str(r[1]), 
@@ -786,8 +804,9 @@ def search_tags():
 def search_comments():
 	payload = request.get_json(force=True)
 	comment_str = payload['comment']
-	cursor = conn.cursor()
 
+	conn = mysql.connect()
+	cursor = conn.cursor()
 	cursor.execute("SELECT U.user_id, U.first_name, U.last_name, C.text, C.timestamp FROM Users U, Comment C WHERE U.user_id = C.user_id AND C.text LIKE '%{0}%'".format(comment_str))
 	res = cursor.fetchall()
 	comment_res = [] 
@@ -809,6 +828,8 @@ def delete_friend():
 	payload = request.get_json(force=True)
 	user_id = payload["userId"]
 	friend_id = payload["friendUserId"]
+
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute("DELETE FROM Friends_With WHERE (friend_one_id={0} OR friend_two_id={1}) AND (friend_one_id={1} OR friend_two_id={1})".format(user_id, friend_id))	
 	return {} 
@@ -818,6 +839,8 @@ def delete_friend():
 def delete_album():
 	payload = request.get_json(force=True)
 	album_id = payload["albumId"]
+
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute("DELETE FROM Album WHERE album_id={0}".format(album_id))
 	return {} 
@@ -827,6 +850,8 @@ def delete_album():
 def delete_photo():
 	payload = request.get_json(force=True)
 	photo_id = payload["photoId"]
+
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute("DELETE FROM Photo WHERE photo_id={0}".format(photo_id))
 	return {} 
@@ -839,6 +864,8 @@ def top_users():
 	uploaded plus the number of comments they have left for photos belonging to other users. 
 	"""
 	top_user_query = "SELECT U.user_id, U.first_name, U.last_name, COUNT(P.photo_id) + COUNT(C.user_id) AS score FROM Users U, Photo P, Album A, Comment C WHERE P.album_id = A.album_id AND U.user_id = A.user_id AND A.user_id = C.user_id AND C.photo_id NOT IN (SELECT P1.photo_id FROM Photo P1, Album A1 WHERE P1.album_id = A1.album_id AND A1.user_id = U.user_id) GROUP BY U.user_id ORDER BY score DESC LIMIT 10"
+	
+	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute(top_user_query)
 	res = cursor.fetchall()
@@ -857,7 +884,7 @@ def top_users():
 ### Code for suggested photos 
 @app.route('/suggestedPhotos/<int:user_id>', methods=["GET"])
 def suggested_photo(user_id):
-
+	conn = mysql.connect()
 	cursor = conn.cursor()
 
 	top_5_tags = "SELECT TP.tag_id, COUNT(TP.tag_id) AS tagCnt FROM Tagged_Photos TP, Photo P, Album A WHERE TP.photo_id = P.photo_id AND A.album_id = P.album_id AND A.user_id = {0} GROUP BY TP.tag_id ORDER BY tagCnt LIMIT 5".format(user_id)				
@@ -906,6 +933,8 @@ def check_friend():
 	payload = request.get_json(force=True)
 	user_id = payload["userId"]
 	friend_id = payload["friendUserId"]
+	conn = mysql.connect()
+	cursor = conn.cursor()
 	cursor.execute("SELECT * FROM Friends_With WHERE (friend_one_id={0} OR friend_two_id={1}) AND (friend_one_id={1} OR friend_two_id={1})".format(user_id, friend_id))
 	res = cursor.fetchall()
 	if res:
