@@ -30,7 +30,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'cs460'
+app.config['MYSQL_DATABASE_PASSWORD'] = ''
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 # app.before_request_funcs.setdefault(None, [decode_cookie])
@@ -866,29 +866,34 @@ def suggested_photo(user_id):
 		take the five most commonly used tags among the user's photos. Perform a disjunctive search through all the photos for these five tags. A
 		photo that contains all five tags should be ranked higher than another one that contains four of the tags and so on.
 		"""
-		top_5_tags = "SELECT TP.tag_id, COUNT(TP.tag_id) AS tagCnt FROM Tagged_Photos TP, Photo P, Album A WHERE TP.photo_id = P.photo_id AND A.album_id = P.album_id AND A.user_id = {0} GROUP BY TP.tag_id ORDER BY tagCnt LIMIT 5".format(user_id)
-		all_photos_w_tags = "SELECT P.photo_id, P.caption, P.data, P.likes FROM (Photo P1, Album A1, Tagged_Photos TP1) AS T1 INNER JOIN (" + top_5_tags + ") AS T2 ON T1.tag_id = T2.tag_id) WHERE P1.album_id = A1.album_id AND NOT A1.user_id = {0} AND P1.photo_id = TP1.tag_id".format(user_id)
-		print(all_photos_w_tags)
+		top_5_tags = "SELECT TP.tag_id, COUNT(TP.tag_id) AS tagCnt FROM Tagged_Photos TP, Photo P, Album A WHERE TP.photo_id = P.photo_id AND A.album_id = P.album_id AND A.user_id = {0} GROUP BY TP.tag_id ORDER BY tagCnt LIMIT 5".format(user_id)				
+		all_photos_w_tags = "SELECT P1.photo_id, P1.caption, P1.data, P1.likes FROM (Photo P1, Album A1, Tagged_Photos TP1) INNER JOIN (" + top_5_tags + ") AS T1 ON T1.tag_id = TP1.tag_id WHERE P1.album_id = A1.album_id AND NOT A1.user_id = {0} AND P1.photo_id = TP1.photo_id".format(user_id)
 		cursor.execute(all_photos_w_tags)
 		res = cursor.fetchall()
-
-		"""
-		top_5_tags = "SELECT TP.tag_id, COUNT(TP.tag_id) AS tagCnt FROM Tagged_Photos TP, Photo P, Album A WHERE TP.photo_id = P.photo_id AND A.album_id = P.album_id AND A.user_id = {0} GROUP BY T.tag_id ORDER BY tagCnt LIMIT 5".format(user_id)
-		all_photos_w_tags = "SELECT P.photo_id, P.caption, P.data, P.likes FROM Photo P1, Album A1, Tagged_Photos TP1 WHERE P1.album_id = A1.album_id AND NOT A1.user_id = {0} AND P1.photo_id = TP1.tag_id INNER JOIN (".format(user_id) + top_5_tags + ") ON TP.tag_id = TP1.tag_id"
-		"""
 	
 	top_res = []
 	for r in res:
 		photo_id = int(r[0])
-		cursor.execute("SELECT T.name FROM Tag T, Tagged_Photos TP WHERE T.tag_id = TP.tag_id AND TP.photo_id = {0}".format(photo_id))		
+		cursor.execute("SELECT T.tag_id, T.name FROM Tag T, Tagged_Photos TP WHERE T.tag_id = TP.tag_id AND TP.photo_id = {0}".format(photo_id))		
+		tag_res = cursor.fetchall()
+		tags = [t[1] for t in tag_res]
+		tag_ids = set([t[0] for t in tag_res])
+
+		# sort the tags by the number that appear 
+		cursor.execute(top_5_tags)
+		top_tags = set([t[0] for t in cursor.fetchall()])
+		num_tags = len(top_tags) - len(top_tags.difference(tag_ids))
+
 		top_res.append({
 			"photoId": photo_id,
 			"caption": str(r[1]), 
 			"url": str(r[2].decode()),
 			"likes": getPhotoLikes(photo_id),
-			"tags": [t[0] for t in cursor.fetchall()]
+			"tags": tags,
+			"numTags": num_tags
 		})
-	return {"err": None, "photos": top_res}
+	# sorted(list_to_be_sorted, key=lambda d: d['name']) 
+	return {"err": None, "photos": sorted(top_res, key=lambda d: d["numTags"], reverse=True)}
 
 ### Code for checking if someone is a friend 
 @app.route("/checkFriend", methods=["POST"])
