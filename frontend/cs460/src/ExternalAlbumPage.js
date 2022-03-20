@@ -107,6 +107,7 @@ class ExternalAlbumPage extends React.Component {
       viewingImage: {
         ...viewingImage,
         previewImage: file.url || file.preview,
+        photoId: file.photoId 
       },
       previewVisible: true,
     });

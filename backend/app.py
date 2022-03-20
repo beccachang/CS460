@@ -860,7 +860,7 @@ def top_users():
 	the number of photos they have
 	uploaded plus the number of comments they have left for photos belonging to other users. 
 	"""
-	top_user_query = "SELECT U.user_id, U.first_name, U.last_name, COUNT(P.photo_id) + COUNT(C.user_id) AS score FROM Users U, Photo P, Album A, Comment C WHERE P.album_id = A.album_id AND U.user_id = A.user_id AND A.user_id = C.user_id AND C.photo_id NOT IN (SELECT P1.photo_id FROM Photo P1, Album A1 WHERE P1.album_id = A1.album_id AND A1.user_id = U.user_id) GROUP BY U.user_id ORDER BY score DESC LIMIT 10"
+	top_user_query = "SELECT U.user_id, U.first_name, U.last_name, COUNT(DISTINCT P.photo_id) + COUNT(DISTINCT C.timestamp) AS score FROM Users U, Photo P, Album A, Comment C WHERE P.album_id = A.album_id AND U.user_id = A.user_id AND A.user_id = C.user_id AND C.photo_id NOT IN (SELECT P1.photo_id FROM Photo P1, Album A1 WHERE P1.album_id = A1.album_id AND A1.user_id = U.user_id) GROUP BY U.user_id ORDER BY score DESC LIMIT 10"
 	
 	conn = mysql.connect()
 	cursor = conn.cursor()

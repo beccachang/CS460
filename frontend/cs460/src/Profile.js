@@ -101,7 +101,7 @@ class Profile extends React.Component {
         this.setState({
           firstName: data.firstName,
           lastName: data.lastName,
-          albums: data.albums,
+          // albums: data.albums,
         })
       });
 

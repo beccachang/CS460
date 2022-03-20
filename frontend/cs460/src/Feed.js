@@ -67,8 +67,8 @@ class Feed extends React.Component {
       width: '50%',
     },
     {
-      title: 'Email',
-      dataIndex: 'email',
+      title: 'Score',
+      dataIndex: 'score',
       with: '50%'
     },
   ];
@@ -161,7 +161,10 @@ class Feed extends React.Component {
     // To do: Get recommended photos 
     // VIVIEN: Here's my attempt at this 
     // endpoint is: /albumPhotos/<int:album_id> 
-    fetch(`/suggestedPhotos/${this.props.userId}`)
+    var userId;
+    if (!this.props.userId) userId = 0;
+    else userId = this.props.userId;
+    fetch(`/suggestedPhotos/${userId}`)
       .then(res => res.json())
       .then(data => {
         console.log("album imgs", data);
@@ -258,6 +261,7 @@ class Feed extends React.Component {
     const { data, pagination, loading } = this.state;
     return (
       <div>
+        <Title level={4}> You May Like </Title>
         <Upload
           listType="picture-card"
           fileList={fileList}
