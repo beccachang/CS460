@@ -57,7 +57,7 @@ class CommentSearch extends React.Component {
                 dataSource={comments}
                 renderItem={item => (
                 <li>
-                    <Comment onClick={() => this.props.visitProfile(item.userId)}
+                    <Comment onClick={() => this.props.viewProfile(item.userId)}
                     author={item.author}
                     avatar={item.avatar}
                     content={item.content}
