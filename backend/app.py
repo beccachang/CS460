@@ -30,7 +30,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'cs460'
+app.config['MYSQL_DATABASE_PASSWORD'] = ''
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 # app.before_request_funcs.setdefault(None, [decode_cookie])
@@ -774,7 +774,7 @@ def search_tags():
 			tag_query += " UNION "  
 		tag_query += "SELECT T.name FROM Tag T WHERE T.name = '{0}'".format(tags[i])
 
-	query = "SELECT P.photo_id, P.caption, P.data, P.likes FROM Photo P, Tagged_Photos TP, Tag T WHERE P.photo_id = TP.photo_id AND TP.tag_id = T.tag_id AND T.name IN (" + tag_query + ")"
+	query = "SELECT DISTINCT P.photo_id, P.caption, P.data, P.likes FROM Photo P, Tagged_Photos TP, Tag T WHERE P.photo_id = TP.photo_id AND TP.tag_id = T.tag_id AND T.name IN (" + tag_query + ")"
 	
 	conn = mysql.connect()
 	cursor = conn.cursor()
