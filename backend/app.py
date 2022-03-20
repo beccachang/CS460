@@ -832,6 +832,7 @@ def delete_friend():
 	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute("DELETE FROM Friends_With WHERE (friend_one_id={0} OR friend_two_id={1}) AND (friend_one_id={1} OR friend_two_id={1})".format(user_id, friend_id))	
+	conn.commit()
 	return {} 
 
 ### Code for deleting album 
@@ -843,6 +844,7 @@ def delete_album():
 	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute("DELETE FROM Album WHERE album_id={0}".format(album_id))
+	conn.commit()
 	return {} 
 
 ### Code for deleting photo 
@@ -854,6 +856,7 @@ def delete_photo():
 	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute("DELETE FROM Photo WHERE photo_id={0}".format(photo_id))
+	conn.commit()
 	return {} 
 
 ### Code for user score 
