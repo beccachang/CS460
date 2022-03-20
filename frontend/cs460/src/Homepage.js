@@ -98,7 +98,7 @@ class Homepage extends React.Component {
           <Header className="site-layout-background" style={{ padding: 0 }} />
           <Content style={{ margin: '0 16px' }}>
             <div className="site-layout-background" style={{ padding: 24, minHeight: 360 }}>
-              {showingPage === 'home' ? <Feed/> : null}
+              {showingPage === 'home' ? <Feed username={this.props.username} userId={this.props.userId} /> : null}
               {showingPage === 'profile' ? <Profile guest={guest} username={this.props.username} userId={this.props.userId} profileUserId={externalUserId} visitExternalAlbumPage={(i, n) => this.visitExternalAlbumPage(i,n)}/> : null}
               {showingPage === 'album' ? <UserAlbumPage album={viewingAlbum} username={this.props.username} userId={this.props.userId}/> : null}
               {showingPage === 'albums' ? <AlbumsList username={this.props.username} userId={this.props.userId} viewAlbum={album => this.visitAlbumPage(album)}/> : null}
