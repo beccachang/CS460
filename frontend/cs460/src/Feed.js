@@ -46,6 +46,7 @@ class Feed extends React.Component {
         comments: [],
         photoTags: [],
       },
+      tagData: [],
       data: [],
       pagination: {
         current: 1,
@@ -71,6 +72,19 @@ class Feed extends React.Component {
       dataIndex: 'score',
       with: '50%'
     },
+  ];
+
+  tagColumns = [
+    {
+      title: 'Name', 
+      dataIndex: 'name',
+      width:'50%'
+    },
+    {
+      title: 'Quantity',
+      dataIndex: 'quantity',
+      width: '50%'
+    }
   ];
 
   componentDidMount() {
@@ -177,6 +191,12 @@ class Feed extends React.Component {
     .then(data => {
       this.setState({ loading: false, data: data.users});
     })
+
+    fetch(`/topTags`)
+    .then(res => res.json())
+    .then(data => {
+      this.setState({ loading: false, tagData: data.tags })
+    })
   };
 
   fetchComments = (photoId) => {
@@ -258,7 +278,7 @@ class Feed extends React.Component {
   render() {
     const { fileList, previewImage, previewImageCaption, previewTitle, previewVisible, viewingImage } = this.state;
     const { likes, comments, photoTags, newComment } = viewingImage;
-    const { data, pagination, loading } = this.state;
+    const { tagData, data, tagPagination, pagination, loading } = this.state;
     return (
       <div>
         <Title level={4}> You May Like </Title>
@@ -331,6 +351,14 @@ class Feed extends React.Component {
               columns={this.personColumns}
               rowKey={record => record.userId}
               dataSource={data}
+              pagination={pagination}
+              loading={loading}
+              onChange={this.handleTableChange}/>
+
+        <Title level={4}> Top Tags </Title>
+        <Table
+              columns={this.tagColumns}
+              dataSource={tagData}
               pagination={pagination}
               loading={loading}
               onChange={this.handleTableChange}/>

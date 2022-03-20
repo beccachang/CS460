@@ -38,13 +38,6 @@ class CommentSearch extends React.Component {
 
   };
 
-  visitProfilePage = (userId) => {
-    this.setState({
-      showingPage: 'profile', 
-      externalUserId: userId
-    });
-  }
-
 
   render() {
     const { comments, loading, } = this.state;
