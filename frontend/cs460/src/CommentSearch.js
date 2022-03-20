@@ -1,9 +1,6 @@
 import React from 'react';
 import './index.css';
-import { Table, PageHeader, Input, Typography, Comment, List } from 'antd';
-import qs from 'qs';
-
-const { Title } = Typography;
+import { PageHeader, Input, Comment, List } from 'antd';
 const {Search} = Input;
 
 class CommentSearch extends React.Component {
@@ -66,19 +63,11 @@ class CommentSearch extends React.Component {
                 itemLayout="horizontal"
                 dataSource={comments}
                 renderItem={item => (
-<<<<<<< HEAD
-                  <li>
-                    <Comment
-                      author={item.author}
-                      avatar={item.avatar}
-                      content={item.content}
-=======
                 <li>
-                    <Comment onClick={this.visitProfilePage(item.userId)}
+                    <Comment onClick={() => this.props.visitProfile(item.userId)}
                     author={item.author}
                     avatar={item.avatar}
                     content={item.content}
->>>>>>> 4a6ac39cbf77cf03efce920a47a7b90a4244d5a2
                     />
                   </li>
                 )}

@@ -287,7 +287,7 @@ class Feed extends React.Component {
           <p>{previewImageCaption}</p>
           <div>
             <p>{"Tags: "}</p>
-            {photoTags.map(tag => <a key={tag}>{tag}&nbsp;</a>)}
+            {photoTags.map(tag => <a key={tag} onClick={()=>this.props.makeTagQuery(tag)}>{tag}&nbsp;</a>)}
           </div>
           <>
             <Form.Item>

@@ -69,6 +69,7 @@ class Homepage extends React.Component {
   }
 
   makeTagQuery = tag => {
+    console.log('hi')
     this.setState({showingPage: 'tagSearch', tag: tag})
   }
 
@@ -85,7 +86,7 @@ class Homepage extends React.Component {
   }
 
   render() {
-    const { collapsed, showingPage, loadedProfile, viewingAlbum, externalUserId, albumId, albumName, tag } = this.state;
+    const { collapsed, showingPage, viewingAlbum, externalUserId, albumId, albumName, tag } = this.state;
     const { guest } = this.props;
     return (
       <Layout style={{ minHeight: '100vh' }}>
@@ -115,15 +116,15 @@ class Homepage extends React.Component {
           <Header className="site-layout-background" style={{ padding: 0 }} />
           <Content style={{ margin: '0 16px' }}>
             <div className="site-layout-background" style={{ padding: 24, minHeight: 360 }}>
-              {showingPage === 'home' ? <Feed username={this.props.username} userId={this.props.userId} /> : null}
+              {showingPage === 'home' ? <Feed username={this.props.username} userId={this.props.userId} makeTagQuery={tag=>this.makeTagQuery(tag)}/> : null}
               {showingPage === 'profile' ? <Profile guest={guest} username={this.props.username} userId={this.props.userId} profileUserId={externalUserId} visitExternalAlbumPage={(i, n) => this.visitExternalAlbumPage(i,n)}/> : null}
               {showingPage === 'album' ? <UserAlbumPage album={viewingAlbum} username={this.props.username} userId={this.props.userId} makeTagQuery={tag=>this.makeTagQuery(tag)}/> : null}
               {showingPage === 'albums' ? <AlbumsList username={this.props.username} userId={this.props.userId} viewAlbum={album => this.visitAlbumPage(album)}/> : null}
               {showingPage === 'friends' ? <FriendsList username={this.props.username} userId={this.props.userId} viewProfile={e => this.visitProfilePage(e)}/> : null}
               {showingPage === 'externalAlbum' ? <ExternalAlbumPage username={this.props.username} userId={this.props.userId} albumId={albumId} albumName={albumName} externalUserId={externalUserId}/> : null}
               {showingPage === 'peopleSearch' ? <PeopleSearch viewProfile={e => this.visitProfilePage(e)}/> : null}
-              {showingPage === 'commentSearch' ? <CommentSearch/> : null}
-              {showingPage === 'tagSearch' ? <TagSearch tag={tag} userId={this.props.userId}/> : null}
+              {showingPage === 'commentSearch' ? <CommentSearch viewProfile={e=> this.visitProfilePage(e)}/> : null}
+              {showingPage === 'tagSearch' ? <TagSearch tag={tag} userId={this.props.userId} makeTagQuery={tag=>this.makeTagQuery(tag)}/> : null}
             </div>
           </Content>
           <Footer style={{ textAlign: 'center' }}>CS460 Project :)</Footer>

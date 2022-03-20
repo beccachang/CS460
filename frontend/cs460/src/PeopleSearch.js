@@ -20,7 +20,6 @@ class PeopleSearch extends React.Component {
   personColumns = [
     {
       title: 'Name',
-      dataIndex: 'name',
       sorter: true,
       render: (record) => 
       <a onClick={() => this.props.viewProfile(record.userId)}>

@@ -1,11 +1,9 @@
 import React from 'react';
 import './index.css';
-import { Table, PageHeader, Input, Typography, Image, Modal, Tooltip, List, Comment, Form, Button, Switch, Upload } from 'antd';
+import { PageHeader, Input, Typography, Image, Modal, Tooltip, List, Comment, Form, Button, Switch, Upload } from 'antd';
 import {
   LikeOutlined,
-  SearchOutlined
 } from '@ant-design/icons';
-import qs from 'qs';
 
 const { Title } = Typography;
 const { Search, TextArea } = Input;
@@ -31,6 +29,7 @@ class TagSearch extends React.Component {
       caption: null,
       newPhoto: null,
       tags: [],
+      defaultSearchValue: this.props.tag,
       loading: false,
       modalOpen: false,
       previewVisible: false,
@@ -151,8 +150,24 @@ class TagSearch extends React.Component {
 
   };
 
+  searchWithTag = (values) => {
+    this.setState({
+      previewVisible: false,
+      viewingImage: {
+        likes: 0,
+        userLikes: [], // array with user info about who liked the post 
+        newComment: "",
+        photoId: "",
+        comments: [],
+        photoTags: [],
+      }
+    })
+
+    this.fetchPhotos(values)
+  }
+
   render() {
-    const { images, viewingImage, previewVisible, loading, searchOnlyMyPhotos } = this.state;
+    const { images, viewingImage, previewVisible, loading, searchOnlyMyPhotos, defaultSearchValue } = this.state;
     const { caption, likes, comments, newComment, previewImage, photoTags } = viewingImage;
     const props = {
       listType: "picture-card",
@@ -173,7 +188,7 @@ class TagSearch extends React.Component {
               unCheckedChildren="All Photos"
               onChange={() => this.setState({ searchOnlyMyPhotos: !searchOnlyMyPhotos })}
             />,
-            <Search allowClear onSearch={values => this.fetchPhotos(values)} style={{ "padding-left": 10, width: 200 }} />,
+            <Search allowClear defaultValue={defaultSearchValue} onSearch={values => this.fetchPhotos(values)} style={{ "padding-left": 10, width: 200 }} />,
           ]}
         />
         {images ? <Upload onPreview={this.handlePreview}
@@ -193,7 +208,7 @@ class TagSearch extends React.Component {
           <p>{caption}</p>
           <div>
             <p>{"Tags: "}</p>
-            {photoTags.map(tag => <a key={tag} onClick={()=>this.props.makeTagQuery(tag)}>{tag}&nbsp;</a>)}
+            {photoTags.map(tag => <a key={tag} onClick={()=>{ this.searchWithTag(tag);}}>{tag}&nbsp;</a>)}
           </div>
           <>
             <Form.Item>
