@@ -103,5 +103,5 @@ Tagged_Photos (
 	photo_id INTEGER, 
 	PRIMARY KEY (tag_id, photo_id), 
 	FOREIGN KEY (tag_id) REFERENCES Tag(tag_id),
-	FOREIGN KEY (photo_id) REFERENCES Photo(photo_id)
+	FOREIGN KEY (photo_id) REFERENCES Photo(photo_id) ON DELETE CASCADE 
 );

@@ -532,7 +532,7 @@ def add_friend():
 
 	conn = mysql.connect()
 	cursor = conn.cursor()
-	cursor.execute('''INSERT INTO Friends_With (uid, friend_id) VALUES (%s, %s)''' ,(user_id, friend_id))
+	cursor.execute('''INSERT INTO Friends_With (friend_one_id, friend_two_id) VALUES (%s, %s)''' ,(user_id, friend_id))
 	conn.commit()
 	return { "err": None, "data": "Successfully added new friend"}
 # end add friend code 
@@ -550,11 +550,9 @@ def list_friends(user_id):
 			data: [(first_name, last_name, gender, email)]
 		}
 	"""	
-	uid = user_id
-
 	conn = mysql.connect()
 	cursor = conn.cursor()
-	cursor.execute("SELECT user_id, first_name, last_name FROM Users WHERE user_id IN (SELECT friend_two_id FROM FRIENDS_WITH WHERE friend_one_id = '{0}')".format(uid))
+	cursor.execute("SELECT FW.friend_one_id AS uid, U.first_name, U.last_name FROM Friends_With FW, Users U WHERE U.user_id = FW.friend_one_id AND FW.friend_two_id = {0} UNION SELECT FW.friend_two_id AS uid, U.first_name, U.last_name FROM Friends_With FW, Users U WHERE U.user_id = FW.friend_two_id AND FW.friend_one_id = {0}".format(user_id))
 	# the current friends 
 	friend_list = []
 	for tup in cursor.fetchall():
@@ -565,11 +563,17 @@ def list_friends(user_id):
 				"lastName": str(tup[2])
 			}
 		)
-	# now get suggested friends 
-	friends_of_friends_query = """SELECT user_id, first_name, last_name FROM Users WHERE user_id IN (SELECT user_id FROM Users WHERE user_id IN (SELECT friend_two_id FROM FRIENDS_WITH WHERE friend_one_id = '{0}'))""".format(uid)
+
+	# get all friends 
+	all_friends_query = "SELECT FW.friend_one_id AS uid, U.first_name, U.last_name FROM Friends_With FW, Users U WHERE U.user_id = FW.friend_one_id AND FW.friend_two_id = {0} UNION SELECT FW.friend_two_id AS uid, U.first_name, U.last_name FROM Friends_With FW, Users U WHERE U.user_id = FW.friend_two_id AND FW.friend_one_id = {0}".format(user_id)
+	
+	# now get every friend from the all friends
+	friends_of_friends_query = "(SELECT U.user_id, U.first_name, U.last_name FROM (Users U, Friends_With FW) INNER JOIN (" + all_friends_query + ") AS F ON F.uid = FW.friend_one_id WHERE U.user_id = FW.friend_two_id AND NOT U.user_id = {0} UNION SELECT U.user_id, U.first_name, U.last_name FROM (Users U, Friends_With FW) INNER JOIN (".format(user_id) + all_friends_query + ") as F ON F.uid = FW.friend_two_id WHERE U.user_id = FW.friend_one_id  AND NOT U.user_id = {0})".format(user_id)
 	cursor.execute(friends_of_friends_query)
+	res = cursor.fetchall() 
+
 	rec_list = [] 
-	for tup in cursor.fetchall():
+	for tup in res:
 		rec_list.append(
 			{
 				"userId": int(tup[0]),
@@ -577,20 +581,6 @@ def list_friends(user_id):
 				"lastName": str(tup[2])
 			}
 		)
-
-	# if the friends list is empty then we will send them all possible people on the site 
-	if not rec_list:
-		friends_of_friends_query = """SELECT user_id, first_name, last_name FROM Users WHERE NOT user_id = '{0}'""".format(uid)
-		cursor.execute(friends_of_friends_query)
-		rec_list = [] 
-		for tup in cursor.fetchall():
-			rec_list.append(
-				{
-					"userId": int(tup[0]),
-					"firstName": str(tup[1]),
-					"lastName": str(tup[2])
-				}
-			)
 	
 	return {"err": None, "friends": friend_list, "suggestedFriends": rec_list }
 # end list friend code 
@@ -656,6 +646,7 @@ def new_comment():
 	conn = mysql.connect()
 	cursor = conn.cursor()
 	cursor.execute('''INSERT INTO Comment (user_id, timestamp, text, photo_id) VALUES (%s,%s,%s,%s)''', (user_id, timestamp, comment, photo_id))
+	conn.commit()
 	return get_all_photo_comments(photo_id)
 
 # begin list comment codes 
@@ -774,7 +765,7 @@ def search_tags():
 			tag_query += " UNION "  
 		tag_query += "SELECT T.name FROM Tag T WHERE T.name = '{0}'".format(tags[i])
 
-	query = "SELECT DISTINCT P.photo_id, P.caption, P.data, P.likes FROM Photo P, Tagged_Photos TP, Tag T WHERE P.photo_id = TP.photo_id AND TP.tag_id = T.tag_id AND T.name IN (" + tag_query + ")"
+	query = "SELECT DISTINCT P.photo_id, P.caption, P.data, P.likes, U.user_id, U.first_name, U.last_name FROM Users U, Photo P, Tagged_Photos TP, Album A, Tag T WHERE A.album_id = P.album_id AND A.user_id = U.user_id AND P.photo_id = TP.photo_id AND TP.tag_id = T.tag_id AND T.name IN (" + tag_query + ")"
 	
 	conn = mysql.connect()
 	cursor = conn.cursor()
@@ -794,7 +785,10 @@ def search_tags():
 				"caption": str(r[1]), 
 				"url": str(r[2].decode()),
 				"likes": getPhotoLikes(photo_id),
-				"tags": photo_tags
+				"tags": photo_tags,
+				"userId": int(r[4]),
+				"firstName": str(r[5]),
+				"lastName": str(r[6])
 			})
 
 	return {"err": None, "photos": tag_res}
