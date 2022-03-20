@@ -837,6 +837,13 @@ def delete_album():
 
 	conn = mysql.connect()
 	cursor = conn.cursor()
+
+	cursor.execute("SELECT T.tag_id FROM Tagged_Photos T, Photo P WHERE T.photo_id = P.photo_id AND P.album_id = {0}").format(album_id)
+	for tag in cursor.fetchall():
+		tag_id = tag[0]
+		cursor.execute("UPDATE Tag SET quantity = quantity - 1 WHERE tag_id={0}".format(tag_id))
+		conn.commit()
+
 	cursor.execute("DELETE FROM Album WHERE album_id={0}".format(album_id))
 	conn.commit()
 	return {} 
@@ -849,6 +856,14 @@ def delete_photo():
 
 	conn = mysql.connect()
 	cursor = conn.cursor()
+	# first decrement all tags used by photo 
+	cursor.execute("SELECT T.tag_id FROM Tagged_Photos T WHERE T.photo_id = {0}".format(photo_id))
+	for tag in cursor.fetchall(): 
+		# decrement count for each tag 
+		tag_id = tag[0]
+		cursor.execute("UPDATE Tag SET quantity = T.quantity - 1 WHERE tag_id = {0}".format(tag_id))
+		conn.commit()
+
 	cursor.execute("DELETE FROM Photo WHERE photo_id={0}".format(photo_id))
 	conn.commit()
 	return {} 
@@ -944,8 +959,8 @@ def check_friend():
 def get_top_tags(): 
 	conn = mysql.connect() 
 	cursor = conn.cursor()
-	cursor.execute("SELECT T.tag_name FROM Tag T ORDER BY T.quantity DESC")
-	return {"err": None, "tags": [t[0] for t in cursor.fetchall()]}
+	cursor.execute("SELECT T.name, T.quantity FROM Tag T ORDER BY T.quantity DESC")
+	return {"err": None, "tags": [{"name": t[0], "quantity": t[1]} for t in cursor.fetchall()]}
 
 if __name__ == "__main__":
 	#this is invoked when in the shell  you run
