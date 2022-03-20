@@ -91,7 +91,6 @@ class TagSearch extends React.Component {
     if (!file.url && !file.preview) {
       file.preview = await getBase64(file.originFileObj);
     }
-    console.log(file);
     const { viewingImage } = this.state;
     this.setState({
 
@@ -111,7 +110,6 @@ class TagSearch extends React.Component {
     fetch(`/comments/${file.photoId}`)
       .then(res => res.json())
       .then(data => {
-        console.log("comments", data);
         // set comments here 
         const { viewingImage } = this.state;
         this.setState({
@@ -144,17 +142,18 @@ class TagSearch extends React.Component {
     fetch(`/searchTags`, requestOptions)
       .then(res => res.json())
       .then(data => {
-        console.log(data.photos)
+        var photos = data.photos;
         if(searchOnlyMyPhotos) {
+          photos = photos.filter(photo => photo.userId == this.props.userId);
         }
-        this.setState({ loading: false, images: data.photos });
+        this.setState({ loading: false, images: photos });
       });
 
   };
 
   render() {
     const { images, viewingImage, previewVisible, loading, searchOnlyMyPhotos } = this.state;
-    const { caption, likes, comments, newComment, previewImage } = viewingImage;
+    const { caption, likes, comments, newComment, previewImage, photoTags } = viewingImage;
     const props = {
       listType: "picture-card",
       fileList: images,
@@ -192,6 +191,10 @@ class TagSearch extends React.Component {
             </span>
           </Tooltip>
           <p>{caption}</p>
+          <div>
+            <p>{"Tags: "}</p>
+            {photoTags.map(tag => <a key={tag} onClick={()=>this.props.makeTagQuery(tag)}>{tag}&nbsp;</a>)}
+          </div>
           <>
             <Form.Item>
               <TextArea

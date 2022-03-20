@@ -1,7 +1,6 @@
 import React from 'react';
 import './index.css';
-import { Table, PageHeader, Input, Typography } from 'antd';
-import qs from 'qs';
+import { Table, PageHeader, Input } from 'antd';
 
 const {Search} = Input;
 
@@ -23,7 +22,7 @@ class PeopleSearch extends React.Component {
       title: 'Name',
       dataIndex: 'name',
       sorter: true,
-      render: (name, record) => 
+      render: (record) => 
       <a onClick={() => this.props.viewProfile(record.userId)}>
         {record.firstName} {record.lastName}
       </a>,

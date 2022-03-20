@@ -31,6 +31,7 @@ class ExternalAlbumPage extends React.Component {
       previewVisible: false,
       viewingImage: {
         previewImage: null,
+        photoTags: [],
         caption: "temp",
         likes: 0,
         newComment: "",
@@ -84,13 +85,13 @@ class ExternalAlbumPage extends React.Component {
     if (!file.url && !file.preview) {
     file.preview = await getBase64(file.originFileObj);
   }
-  console.log(file)
 
     this.setState({
       viewingImage: {
         ...viewingImage,
         previewImage: file.url || file.preview,
-        photoId: file.photoId
+        photoId: file.photoId,
+        photoTags: file.tags
       },
       previewVisible: true,
     });
@@ -194,7 +195,7 @@ class ExternalAlbumPage extends React.Component {
 
   render() {
     const { images, viewingImage, previewVisible } = this.state;
-    const { caption, likes, comments, newComment, previewImage } = viewingImage;
+    const { caption, likes, comments, newComment, previewImage, photoTags } = viewingImage;
     const props = {
       listType: "picture-card",
         fileList: images,
@@ -223,6 +224,10 @@ class ExternalAlbumPage extends React.Component {
                 </span>
               </Tooltip>
               <p>{caption}</p>
+              <div>
+                <p>{"Tags: "}</p>
+                {photoTags.map(tag => <a key={tag} onClick={()=>this.props.makeTagQuery(tag)}>{tag}&nbsp;</a>)}
+              </div>
               <>
                 <Form.Item>
                   <TextArea 

@@ -1,17 +1,10 @@
 import React from 'react';
 import './index.css';
-import { Table, PageHeader, Button, Input, Popover } from 'antd';
-import qs from 'qs';
+import { Table, PageHeader, Button } from 'antd';
 import {
     PlusOutlined,
     MinusOutlined
   } from '@ant-design/icons';
-
-const getRandomuserParams = params => ({
-  results: params.pagination.pageSize,
-  page: params.pagination.current,
-  ...params,
-});
 
 class Profile extends React.Component {
   constructor(props) {
@@ -26,6 +19,7 @@ class Profile extends React.Component {
       isFriend: false,
       firstName: "",
       lastName: "",
+      isSelf: this.props.userId == this.props.profileUserId
     };
   }
   
@@ -41,6 +35,9 @@ class Profile extends React.Component {
   componentDidMount() {
     this.fetchProfile(this.props.profileUserId);
     this.fetchAlbums(this.props.profileUserId);
+    if (this.props.userId !== this.props.profileUserId) {
+      this.checkFriend();
+    }
   }
 
   handleTableChange = (pagination, filters, sorter) => {
@@ -53,10 +50,10 @@ class Profile extends React.Component {
   };
 
   handleFriendStatusChange = isFriend => {
-    if (isFriend) {
+    if (!isFriend) {
       var payload = JSON.stringify({
         userId: this.props.userId,
-			  friendUserId: this.props.loadedProfile.userId
+			  friendUserId: this.props.profileUserId
       });
   
   
@@ -74,7 +71,7 @@ class Profile extends React.Component {
     } else {
       var payload = JSON.stringify({
         userId: this.props.userId,
-			  friendUserId: this.props.loadedProfile.userId
+			  friendUserId: this.props.profileUserId
       });
   
   
@@ -84,7 +81,7 @@ class Profile extends React.Component {
           redirect: 'follow'
       };
   
-      fetch(`/removeFriend`, requestOptions)
+      fetch(`/deleteFriend`, requestOptions)
       .then(res => res.json())
       .then(data => {
         this.setState({isFriend: !isFriend})
@@ -113,15 +110,36 @@ class Profile extends React.Component {
       });
   }
   
+  checkFriend = () => {
+    var payload = JSON.stringify({
+      userId: this.props.userId,
+      friendUserId: this.props.profileUserId
+    });
+
+
+    var requestOptions = {
+        method: 'POST',
+        body: payload,
+        redirect: 'follow'
+    };
+
+    fetch(`/checkFriend`, requestOptions)
+    .then(res => res.json())
+    .then(data => {
+      console.log(data);
+      this.setState({isFriend: data.Friends})
+    });
+  }
+
   render() {
-    const { albums, pagination, loading, isFriend, firstName, lastName } = this.state;
+    const { albums, pagination, loading, isFriend, firstName, lastName, isSelf } = this.state;
     return (
         <div>
             <PageHeader
                 className="site-page-header"
                 title={firstName + ' ' + lastName}
                 extra={[    
-                    <Button disabled={this.props.guest} key="1" type="primary" icon={isFriend ? <MinusOutlined/> : <PlusOutlined/> } onClick={() => this.handleFriendStatusChange(isFriend)}>
+                    <Button disabled={this.props.guest || isSelf} key="1" type="primary" icon={isFriend ? <MinusOutlined/> : <PlusOutlined/> } onClick={() => this.handleFriendStatusChange(isFriend)}>
                         {isFriend ? 'Remove Friend': 'Add Friend' }
                     </Button>
                 ]}

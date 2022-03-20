@@ -21,7 +21,6 @@ import ExternalAlbumPage from './ExternalAlbumPage';
 import PeopleSearch from './PeopleSearch';
 import CommentSearch from './CommentSearch';
 import TagSearch from './TagSearch';
-import { triggerFocus } from 'antd/lib/input/Input';
 
 const { Header, Content, Footer, Sider } = Layout;
 const { SubMenu } = Menu;
@@ -120,11 +119,11 @@ class Homepage extends React.Component {
               {showingPage === 'profile' ? <Profile guest={guest} username={this.props.username} userId={this.props.userId} profileUserId={externalUserId} visitExternalAlbumPage={(i, n) => this.visitExternalAlbumPage(i,n)}/> : null}
               {showingPage === 'album' ? <UserAlbumPage album={viewingAlbum} username={this.props.username} userId={this.props.userId} makeTagQuery={tag=>this.makeTagQuery(tag)}/> : null}
               {showingPage === 'albums' ? <AlbumsList username={this.props.username} userId={this.props.userId} viewAlbum={album => this.visitAlbumPage(album)}/> : null}
-              {showingPage === 'friends' ? <FriendsList username={this.props.username} userId={this.props.userId} viewProfile={account => this.visitProfilePage(account)}/> : null}
+              {showingPage === 'friends' ? <FriendsList username={this.props.username} userId={this.props.userId} viewProfile={e => this.visitProfilePage(e)}/> : null}
               {showingPage === 'externalAlbum' ? <ExternalAlbumPage username={this.props.username} userId={this.props.userId} albumId={albumId} albumName={albumName} externalUserId={externalUserId}/> : null}
               {showingPage === 'peopleSearch' ? <PeopleSearch viewProfile={e => this.visitProfilePage(e)}/> : null}
               {showingPage === 'commentSearch' ? <CommentSearch/> : null}
-              {showingPage === 'tagSearch' ? <TagSearch tag={tag}/> : null}
+              {showingPage === 'tagSearch' ? <TagSearch tag={tag} userId={this.props.userId}/> : null}
             </div>
           </Content>
           <Footer style={{ textAlign: 'center' }}>CS460 Project :)</Footer>

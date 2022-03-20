@@ -1,16 +1,9 @@
 import React from 'react';
 import './index.css';
 import { Table, PageHeader, Input, Typography } from 'antd';
-import qs from 'qs';
 
 const { Title } = Typography;
 const {Search} = Input;
-
-const getRandomuserParams = params => ({
-  results: params.pagination.pageSize,
-  page: params.pagination.current,
-  ...params,
-});
 
 class FriendsList extends React.Component {
   constructor(props) {
@@ -22,35 +15,20 @@ class FriendsList extends React.Component {
         pageSize: 10,
       },
       loading: false,
+      friends: [],
+      suggestedFriendsColumns: []
     };
   }
  
   friendsColumns = [
     {
       title: 'Name',
-      dataIndex: 'name',
       sorter: true,
-      render: (name, record) => 
-      <a onClick={() => this.props.viewProfile({
-        firstName: name.first,
-        lastName: name.last,
-        email: record.email,
-        hometown: record.location.city,
-        dateOfBirth: record.dob,
-        gender: record.gender,
-        isFriend: true})}>
-        {name.first} {name.last}
+      render: (record) => 
+      <a onClick={() => this.props.viewProfile(record.userId)}>
+        {record.firstName} {record.lastName}
       </a>,
       width: '20%',
-    },
-    {
-      title: 'Gender',
-      dataIndex: 'gender',
-      width: '20%',
-    },
-    {
-      title: 'Email',
-      dataIndex: 'email',
     },
   ];
 
@@ -108,28 +86,13 @@ class FriendsList extends React.Component {
     .then(res => res.json())
     .then(data => {
       // TODO: this needs to be integrated to the table
-      console.log(data);
-      this.setState({loading: false});
+      console.log(data.friends);
+      this.setState({loading: false, friends: data.friends});
     })
-
-    // fetch(`https://randomuser.me/api?${qs.stringify(getRandomuserParams(params))}`)
-    //   .then(res => res.json())
-    //   .then(data => {
-    //     this.setState({
-    //       loading: false,
-    //       data: data.results,
-    //       pagination: {
-    //         ...params.pagination,
-    //         total: 200,
-    //         // 200 is mock data, you should read it from server
-    //         // total: data.totalCount,
-    //       },
-    //     });
-    //   });
   };
 
   render() {
-    const { data, pagination, loading } = this.state;
+    const { data, pagination, loading, friends } = this.state;
     return (
         <div>
             <PageHeader
@@ -142,12 +105,11 @@ class FriendsList extends React.Component {
             />
             <Table
               columns={this.friendsColumns}
-              rowKey={record => record.login.uuid}
-              dataSource={data}
+              rowKey={record => record.userId}
+              dataSource={friends}
               pagination={pagination}
               loading={loading}
-              onChange={this.handleTableChange}
-              onClick={() =>console.log('hellowww')}/>
+              onChange={this.handleTableChange}/>
             <Title level={4}> Suggested Friends </Title>
             <Table
               columns={this.suggestedFriendsColumns}
