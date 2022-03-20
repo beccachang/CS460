@@ -1,9 +1,6 @@
 import React from 'react';
 import './index.css';
-import { Table, PageHeader, Input, Typography, Comment, List } from 'antd';
-import qs from 'qs';
-
-const { Title } = Typography;
+import { PageHeader, Input, Comment, List } from 'antd';
 const {Search} = Input;
 
 class CommentSearch extends React.Component {
@@ -60,7 +57,7 @@ class CommentSearch extends React.Component {
                 dataSource={comments}
                 renderItem={item => (
                 <li>
-                    <Comment onClick={() => this.props.viewProfile(item.userId)}
+                    <Comment onClick={() => this.props.visitProfile(item.userId)}
                     author={item.author}
                     avatar={item.avatar}
                     content={item.content}
