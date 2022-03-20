@@ -41,6 +41,14 @@ class CommentSearch extends React.Component {
 
   };
 
+  visitProfilePage = (userId) => {
+    this.setState({
+      showingPage: 'profile', 
+      externalUserId: userId
+    });
+  }
+
+
   render() {
     const { comments, loading, } = this.state;
     return (
@@ -58,11 +66,19 @@ class CommentSearch extends React.Component {
                 itemLayout="horizontal"
                 dataSource={comments}
                 renderItem={item => (
+<<<<<<< HEAD
                   <li>
                     <Comment
                       author={item.author}
                       avatar={item.avatar}
                       content={item.content}
+=======
+                <li>
+                    <Comment onClick={this.visitProfilePage(item.userId)}
+                    author={item.author}
+                    avatar={item.avatar}
+                    content={item.content}
+>>>>>>> 4a6ac39cbf77cf03efce920a47a7b90a4244d5a2
                     />
                   </li>
                 )}

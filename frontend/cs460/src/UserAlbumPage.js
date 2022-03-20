@@ -47,7 +47,6 @@ class UserAlbumPage extends React.Component {
     };
   }
 
-
     componentDidMount() {
         const { pagination } = this.state;
         this.fetch({ pagination });
