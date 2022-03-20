@@ -36,7 +36,7 @@ class AlbumsList extends React.Component {
     },
     {
       title: 'Actions',
-      render: (record) => <DeleteOutlined onClick={console.log('delete album here')}/>,
+      render: (record) => <DeleteOutlined onClick={()=>this.deleteAlbum(record.id)}/>,
       width: '20%'
     }
   ];
@@ -93,6 +93,29 @@ class AlbumsList extends React.Component {
     })
     .catch(error => console.log('error', error));
 
+
+  }
+
+  deleteAlbum = albumId => {
+    var payload = JSON.stringify({
+      albumId: albumId
+    });
+
+    var requestOptions = {
+        method: 'POST',
+        body: payload,
+        redirect: 'follow'
+    };
+
+    this.setState({ loading: true });
+    fetch("/deleteAlbum", requestOptions)
+    .then(result => { 
+        var res = result.json(); 
+        res.then( data => {
+            console.log(data);
+        });
+    })
+    .catch(error => console.log('error', error));
 
   }
 

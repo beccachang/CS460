@@ -20,16 +20,25 @@ class CommentSearch extends React.Component {
     };
   }
 
-  fetch = (params = {}) => {
+  fetchComments = value => {
     this.setState({ loading: true });
-    // To do: search by comment
-    // fetch(`/friends/${this.props.userId}`)
-    // .then(res => res.json())
-    // .then(data => {
-    //   // TODO: this needs to be integrated to the table
-    //   console.log(data);
-    //   this.setState({loading: false, data: data});
-    //})
+    var payload = JSON.stringify({
+      comment: value,
+    });
+
+
+    var requestOptions = {
+        method: 'POST',
+        body: payload,
+        redirect: 'follow'
+    };
+
+    fetch(`/searchComments`, requestOptions)
+    .then(res => res.json())
+    .then(data => {
+      console.log(data);
+      //this.setState({ loading: false, data: data.comments});
+    });
 
   };
 
@@ -41,7 +50,7 @@ class CommentSearch extends React.Component {
                 className="site-page-header"
                 title="Comment Search"
                 extra={[    
-                    <Search allowClear onSearch={() => console.log("hello")} style={{ width: 200 }} />,
+                    <Search allowClear onSearch={value => this.fetchComments(value)} style={{ width: 200 }} />,
                 ]}
             />
             {comments ? 

@@ -195,7 +195,7 @@ class UserAlbumPage extends React.Component {
 
     // to do: backend call to add comment to db
     var payload = JSON.stringify({
-      photoId: this.state.viewingImage.photoId,
+      photoId: viewingImage.photoId,
       userId: this.props.userId,
       comment: newComment
     });
@@ -219,6 +219,10 @@ class UserAlbumPage extends React.Component {
       })
     });
 
+  }
+
+  handleDelete = e => {
+    console.log(e)
   }
 
   render() {
@@ -252,7 +256,7 @@ class UserAlbumPage extends React.Component {
                 fileList={fileList}
                 onPreview={this.handlePreview}
                 onChange={this.handleChange}
-                onDelete={console.log('delete file')}
+                onDelete={this.handleDelete}
             >
                 {null}
             </Upload>

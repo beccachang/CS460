@@ -33,13 +33,14 @@ class Profile extends React.Component {
     {
       title: 'Albums',
       sorter: true,
-      render: record => <a onClick={() => this.props.visitExternalAlbumPage(record.id)}>{record.name}</a>,
+      render: record => <a onClick={() => this.props.visitExternalAlbumPage(record.id, record.name)}>{record.name}</a>,
       width: '20%',
     },
   ];
 
   componentDidMount() {
     this.fetchProfile(this.props.profileUserId);
+    this.fetchAlbums(this.props.profileUserId);
   }
 
   handleTableChange = (pagination, filters, sorter) => {
@@ -104,13 +105,15 @@ class Profile extends React.Component {
           albums: data.albums,
         })
       });
+  }
 
-      fetch(`/albums/${userId}`)
+  fetchAlbums = userId => {
+    fetch(`/albums/${userId}`)
       .then(res => res.json())
       .then(data => {
+        console.log(data)
         this.setState({albums: data.albums, loading: false})
       });
-
   }
   render() {
     const { albums, pagination, loading, isFriend, firstName, lastName } = this.state;
