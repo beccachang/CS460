@@ -33,6 +33,14 @@ class CommentSearch extends React.Component {
 
   };
 
+  visitProfilePage = (userId) => {
+    this.setState({
+      showingPage: 'profile', 
+      externalUserId: userId
+    });
+  }
+
+
   render() {
     const { comments, loading, commentCount } = this.state;
     return (
@@ -52,7 +60,7 @@ class CommentSearch extends React.Component {
                 dataSource={comments}
                 renderItem={item => (
                 <li>
-                    <Comment
+                    <Comment onClick={this.visitProfilePage(item.userId)}
                     author={item.author}
                     avatar={item.avatar}
                     content={item.content}
