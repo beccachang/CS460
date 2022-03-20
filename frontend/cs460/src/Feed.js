@@ -279,18 +279,19 @@ class Feed extends React.Component {
     const { fileList, previewImage, previewImageCaption, previewTitle, previewVisible, viewingImage } = this.state;
     const { likes, comments, photoTags, newComment } = viewingImage;
     const { tagData, data, tagPagination, pagination, loading } = this.state;
+    const props = {
+      listType: "picture-card",
+        fileList: fileList,
+        showUploadList:{
+        showRemoveIcon: false
+      }
+    }
     return (
       <div>
         <Title level={4}> You May Like </Title>
-        <Upload
-          listType="picture-card"
-          fileList={fileList}
-          onPreview={this.handlePreview}
-          onChange={this.handleChange}
-          onDelete={console.log('delete file')}
-        >
-          {null}
-        </Upload>
+        <Upload onPreview={this.handlePreview}
+              {...props}
+            />
         <Modal
           visible={previewVisible}
           title={previewTitle}
