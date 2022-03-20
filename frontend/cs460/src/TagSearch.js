@@ -37,6 +37,7 @@ class TagSearch extends React.Component {
       previewImage: '',
       previewImageCaption: '',
       previewTitle: '',
+      searchOnlyMyPhotos: false,
       fileList: [],
       viewingImage: {
         likes: 0,
@@ -47,6 +48,13 @@ class TagSearch extends React.Component {
         photoTags: [],
       }
     };
+  }
+
+  componentDidMount() {
+    const { pagination } = this.state;
+    if (this.props.tag) {
+      this.fetchPhotos(this.props.tag);
+    }
   }
 
   personColumns = [
@@ -118,6 +126,7 @@ class TagSearch extends React.Component {
   handleCancel = () => this.setState({ previewVisible: false });
 
   fetchPhotos = (values) => {
+    const { searchOnlyMyPhotos } = this.state;
     this.setState({ loading: true, images: [] });
     const tagsArray = values.split(' ');
     this.setState({ loading: true });
@@ -135,8 +144,9 @@ class TagSearch extends React.Component {
     fetch(`/searchTags`, requestOptions)
       .then(res => res.json())
       .then(data => {
-        console.log(data);
-        // To do: filter if only users photos
+        console.log(data.photos)
+        if(searchOnlyMyPhotos) {
+        }
         this.setState({ loading: false, images: data.photos });
       });
 

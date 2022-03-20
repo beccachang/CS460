@@ -109,10 +109,16 @@ class AlbumsList extends React.Component {
 
     this.setState({ loading: true });
     fetch("/deleteAlbum", requestOptions)
-    .then(result => { 
-        var res = result.json(); 
-        res.then( data => {
-            console.log(data);
+    .then(() => { 
+      fetch(`/albums/${this.props.userId}`)
+      .then(res => res.json())
+      .then(data => {
+          if (data.err) { console.log(data.err); return; } 
+          this.setState({
+            loading: false,
+            data: data.albums,
+            fullData: data.albums,
+          });
         });
     })
     .catch(error => console.log('error', error));

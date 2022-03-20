@@ -189,7 +189,7 @@ class UserAlbumPage extends React.Component {
     });
   }
 
-  createNewComment = (photoID) => {
+  createNewComment = () => {
     const { viewingImage } = this.state;
     var { comments, newComment } = viewingImage;
 
@@ -222,7 +222,21 @@ class UserAlbumPage extends React.Component {
   }
 
   handleDelete = e => {
-    console.log(e)
+    var payload = JSON.stringify({
+      photoId: e.photoId,
+    });
+
+    var requestOptions = {
+        method: 'POST',
+        body: payload,
+        redirect: 'follow'
+    };
+
+    fetch(`/deletePhoto`, requestOptions)
+    .then(res => res.json())
+    .then(() => {
+      console.log('photo deleted')
+    });
   }
 
   render() {
@@ -256,7 +270,7 @@ class UserAlbumPage extends React.Component {
                 fileList={fileList}
                 onPreview={this.handlePreview}
                 onChange={this.handleChange}
-                onDelete={this.handleDelete}
+                onRemove={this.handleDelete}
             >
                 {null}
             </Upload>
@@ -276,7 +290,7 @@ class UserAlbumPage extends React.Component {
               <p>{previewImageCaption}</p>
               <div>
                 <p>{"Tags: "}</p>
-                {photoTags.map(tag => <a key={tag}>{tag}&nbsp;</a>)}
+                {photoTags.map(tag => <a key={tag} onClick={()=>this.props.makeTagQuery(tag)}>{tag}&nbsp;</a>)}
               </div>
               <>
                 <Form.Item>

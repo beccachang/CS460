@@ -10,7 +10,7 @@ class CommentSearch extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-        comments: null,
+        comments: [],
         pagination: {
             current: 1,
             pageSize: 10,
@@ -36,14 +36,13 @@ class CommentSearch extends React.Component {
     fetch(`/searchComments`, requestOptions)
     .then(res => res.json())
     .then(data => {
-      console.log(data);
-      //this.setState({ loading: false, data: data.comments});
+      this.setState({ loading: false, comments: data.comments});
     });
 
   };
 
   render() {
-    const { comments, loading, commentCount } = this.state;
+    const { comments, loading, } = this.state;
     return (
         <div>
             <PageHeader
@@ -53,25 +52,21 @@ class CommentSearch extends React.Component {
                     <Search allowClear onSearch={value => this.fetchComments(value)} style={{ width: 200 }} />,
                 ]}
             />
-            {comments ? 
-                <List
+            <List
                 className="comment-list"
-                header={commentCount ? `${commentCount} comments found` : null}
+                header={`${comments.length} comments`}
                 itemLayout="horizontal"
                 dataSource={comments}
                 renderItem={item => (
-                <li>
+                  <li>
                     <Comment
-                    author={item.author}
-                    avatar={item.avatar}
-                    content={item.content}
+                      author={item.author}
+                      avatar={item.avatar}
+                      content={item.content}
                     />
-                </li>
+                  </li>
                 )}
-            /> :
-                <List/>
-            }
-            
+              />
         </div>
       
     );

@@ -98,11 +98,9 @@ class Profile extends React.Component {
     fetch(`/profile/${userId}`)
       .then(res => res.json())
       .then(data => {
-        console.log(data)
         this.setState({
           firstName: data.firstName,
           lastName: data.lastName,
-          albums: data.albums,
         })
       });
   }
@@ -111,10 +109,10 @@ class Profile extends React.Component {
     fetch(`/albums/${userId}`)
       .then(res => res.json())
       .then(data => {
-        console.log(data)
         this.setState({albums: data.albums, loading: false})
       });
   }
+  
   render() {
     const { albums, pagination, loading, isFriend, firstName, lastName } = this.state;
     return (

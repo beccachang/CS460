@@ -90,6 +90,7 @@ class ExternalAlbumPage extends React.Component {
       viewingImage: {
         ...viewingImage,
         previewImage: file.url || file.preview,
+        photoId: file.photoId
       },
       previewVisible: true,
     });
@@ -130,7 +131,8 @@ class ExternalAlbumPage extends React.Component {
 
   
   addLike = likes => {
-    const {viewingImage} = this.state;
+    const { viewingImage } = this.state;
+    console.log(viewingImage)
     var payload = JSON.stringify({
       photoId: viewingImage.photoId,
       userId: this.props.userId
@@ -150,7 +152,7 @@ class ExternalAlbumPage extends React.Component {
       this.setState({
         viewingImage: {
           ...viewingImage,
-          likes: data.likes.length,
+          likes: data.likes.totalQnty,
           userLikes: data.likes.users 
         }
       })
