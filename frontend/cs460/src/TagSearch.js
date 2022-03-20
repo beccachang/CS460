@@ -168,6 +168,7 @@ class TagSearch extends React.Component {
           title="Tag Search"
           extra={[
             <Switch
+              disabled={this.props.guest}
               checked={searchOnlyMyPhotos}
               checkedChildren="My Photos"
               unCheckedChildren="All Photos"

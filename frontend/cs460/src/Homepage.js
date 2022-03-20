@@ -122,8 +122,8 @@ class Homepage extends React.Component {
               {showingPage === 'friends' ? <FriendsList username={this.props.username} userId={this.props.userId} viewProfile={e => this.visitProfilePage(e)}/> : null}
               {showingPage === 'externalAlbum' ? <ExternalAlbumPage username={this.props.username} userId={this.props.userId} albumId={albumId} albumName={albumName} externalUserId={externalUserId}/> : null}
               {showingPage === 'peopleSearch' ? <PeopleSearch viewProfile={e => this.visitProfilePage(e)}/> : null}
-              {showingPage === 'commentSearch' ? <CommentSearch/> : null}
-              {showingPage === 'tagSearch' ? <TagSearch tag={tag} userId={this.props.userId}/> : null}
+              {showingPage === 'commentSearch' ? <CommentSearch viewProfile={e => this.visitProfilePage(e)}/> : null}
+              {showingPage === 'tagSearch' ? <TagSearch tag={tag} userId={this.props.userId} guest={guest}/> : null}
             </div>
           </Content>
           <Footer style={{ textAlign: 'center' }}>CS460 Project :)</Footer>

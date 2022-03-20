@@ -939,6 +939,14 @@ def check_friend():
 	else:
 		return {"err": None, "Friends": False}
 
+### Code for top 10 tags 
+@app.route("/topTags", methods=["GET"])
+def get_top_tags(): 
+	conn = mysql.connect() 
+	cursor = conn.cursor()
+	cursor.execute("SELECT T.tag_name FROM Tag T ORDER BY T.quantity DESC")
+	return {"err": None, "tags": [t[0] for t in cursor.fetchall()]}
+
 if __name__ == "__main__":
 	#this is invoked when in the shell  you run
 	#$ python app.py
