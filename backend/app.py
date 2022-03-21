@@ -645,6 +645,15 @@ def new_comment():
 
 	conn = mysql.connect()
 	cursor = conn.cursor()
+
+	if user_id == 0: 
+		user_id = 1000000
+		# random user 
+		cursor.execute("SELECT * FROM Users WHERE user_id = 1000000")
+		if not cursor.fetchone():
+			cursor.execute("INSERT INTO Users (user_id, first_name, last_name, email, password) VALUES ({0}, '{1}', '{2}', '{3}', '{4}')".format(user_id, "Random", "User", "random@gmail.com", "random"))
+			conn.commit() 
+	
 	cursor.execute('''INSERT INTO Comment (user_id, timestamp, text, photo_id) VALUES (%s,%s,%s,%s)''', (user_id, timestamp, comment, photo_id))
 	conn.commit()
 	return get_all_photo_comments(photo_id)

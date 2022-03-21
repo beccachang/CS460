@@ -163,14 +163,16 @@ class ExternalAlbumPage extends React.Component {
   createNewComment = () => {
     const { viewingImage } = this.state;
     var { comments, newComment } = viewingImage;
-
+    
+    var userId;
+    if (this.props.userId) userId = this.props.userId; 
+    else userId = 0;    
     // to do: backend call to add comment to db
     var payload = JSON.stringify({
-      photoId: this.state.viewingImage.photoId,
-      userId: this.props.userId,
+      photoId: viewingImage.photoId,
+      userId: userId,
       comment: newComment
     });
-
 
     var requestOptions = {
         method: 'POST',

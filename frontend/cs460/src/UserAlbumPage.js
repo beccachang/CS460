@@ -192,10 +192,13 @@ class UserAlbumPage extends React.Component {
     const { viewingImage } = this.state;
     var { comments, newComment } = viewingImage;
 
+    var userId;
+    if (this.props.userId) userId = this.props.userId; 
+    else userId = 0;    
     // to do: backend call to add comment to db
     var payload = JSON.stringify({
       photoId: viewingImage.photoId,
-      userId: this.props.userId,
+      userId: userId,
       comment: newComment
     });
 
