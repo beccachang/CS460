@@ -30,7 +30,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'cs460'
+app.config['MYSQL_DATABASE_PASSWORD'] = ''
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 # app.before_request_funcs.setdefault(None, [decode_cookie])
@@ -478,23 +478,26 @@ def upload_file():
 	for tag in set(tags): 
 		# lower case 
 		tag = tag.lower()
-		if tag != "":
-			# check if the tag exists 
-			cursor.execute("SELECT tag_id FROM Tag T WHERE T.name='{0}'".format(tag))
-			fetched_tag = cursor.fetchone() 
-			if fetched_tag: 
-				tag_id = fetched_tag[0]
-				cursor.execute('''UPDATE Tag SET quantity = quantity + 1''') 
-				cursor.execute('''INSERT INTO Tagged_Photos (tag_id, photo_id) VALUES (%s, %s)''', (tag_id, photo_id))
+		# check if the tag exists 
+		cursor.execute("SELECT tag_id FROM Tag T WHERE T.name='{0}'".format(tag))
+		
+		fetched_tag = cursor.fetchone() 
+
+		if fetched_tag: 
+			tag_id = fetched_tag[0]
+			cursor.execute('''UPDATE Tag SET quantity = quantity + 1 WHERE tag_id = {0}'''.format(tag_id)) 
+			conn.commit()
+			cursor.execute('''INSERT INTO Tagged_Photos (tag_id, photo_id) VALUES (%s, %s)''', (tag_id, photo_id))
+			conn.commit()
 		else:
 			cursor.execute('''INSERT INTO Tag (name) VALUES (%s)''', (tag))
-
+			conn.commit()
 			# last inserted tag_id
 			cursor.execute('''SELECT LAST_INSERT_ID() FROM Tag''') 
 			tag_id = cursor.fetchone()[0]
 			cursor.execute('''INSERT INTO Tagged_Photos (tag_id, photo_id) VALUES (%s, %s)''', (tag_id, photo_id))
+			conn.commit()
 
-		conn.commit()
 	
 	return {"err": None, "photos": getAlbumsPhotos(album_id)}
 #end photo uploading code

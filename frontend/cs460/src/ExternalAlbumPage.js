@@ -32,7 +32,7 @@ class ExternalAlbumPage extends React.Component {
       viewingImage: {
         previewImage: null,
         photoTags: [],
-        caption: "temp",
+        caption: "",
         likes: 0,
         newComment: "",
           comments: [
@@ -84,12 +84,14 @@ class ExternalAlbumPage extends React.Component {
     const { viewingImage } = this.state;
     if (!file.url && !file.preview) {
     file.preview = await getBase64(file.originFileObj);
-  }
+    }
 
     this.setState({
       viewingImage: {
         ...viewingImage,
         previewImage: file.url || file.preview,
+        previewImageCaption: file.caption,
+        caption: file.caption,
         photoId: file.photoId,
         photoTags: file.tags
       },

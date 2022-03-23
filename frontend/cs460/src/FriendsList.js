@@ -16,6 +16,7 @@ class FriendsList extends React.Component {
       },
       loading: false,
       friends: [],
+      suggestedFriends: [],
       suggestedFriendsColumns: []
     };
   }
@@ -35,29 +36,12 @@ class FriendsList extends React.Component {
   suggestedFriendsColumns = [
     {
       title: 'Name',
-      dataIndex: 'name',
       sorter: true,
-      render: (name, record) => 
-      <a onClick={() => this.props.pageChange({
-        firstName: name.first,
-        lastName: name.last,
-        email: record.email,
-        hometown: record.location.city,
-        dateOfBirth: record.dob,
-        gender: record.gender,
-        isFriend: false})}>
-        {name.first} {name.last}
+      render: (record) => 
+      <a onClick={() => this.props.viewProfile(record.userId)}>
+        {record.firstName} {record.lastName}
       </a>,
       width: '20%',
-    },
-    {
-      title: 'Gender',
-      dataIndex: 'gender',
-      width: '20%',
-    },
-    {
-      title: 'Email',
-      dataIndex: 'email',
     },
   ];
 
@@ -87,12 +71,12 @@ class FriendsList extends React.Component {
     .then(data => {
       // TODO: this needs to be integrated to the table
       console.log(data.friends);
-      this.setState({loading: false, friends: data.friends});
+      this.setState({loading: false, friends: data.friends, suggestedFriends: data.suggestedFriends});
     })
   };
 
   render() {
-    const { data, pagination, loading, friends } = this.state;
+    const { data, pagination, loading, friends, suggestedFriends } = this.state;
     return (
         <div>
             <PageHeader
@@ -113,8 +97,8 @@ class FriendsList extends React.Component {
             <Title level={4}> Suggested Friends </Title>
             <Table
               columns={this.suggestedFriendsColumns}
-              rowKey={record => record.login.uuid}
-              dataSource={data}
+              rowKey={record => record.userId}
+              dataSource={suggestedFriends}
               pagination={pagination}
               loading={loading}
               onChange={this.handleTableChange}/>
