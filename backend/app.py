@@ -478,14 +478,14 @@ def upload_file():
 	for tag in set(tags): 
 		# lower case 
 		tag = tag.lower()
-
-		# check if the tag exists 
-		cursor.execute("SELECT tag_id FROM Tag T WHERE T.name='{0}'".format(tag))
-		fetched_tag = cursor.fetchone() 
-		if fetched_tag: 
-			tag_id = fetched_tag[0]
-			cursor.execute('''UPDATE Tag SET quantity = quantity + 1''') 
-			cursor.execute('''INSERT INTO Tagged_Photos (tag_id, photo_id) VALUES (%s, %s)''', (tag_id, photo_id))
+		if tag != "":
+			# check if the tag exists 
+			cursor.execute("SELECT tag_id FROM Tag T WHERE T.name='{0}'".format(tag))
+			fetched_tag = cursor.fetchone() 
+			if fetched_tag: 
+				tag_id = fetched_tag[0]
+				cursor.execute('''UPDATE Tag SET quantity = quantity + 1''') 
+				cursor.execute('''INSERT INTO Tagged_Photos (tag_id, photo_id) VALUES (%s, %s)''', (tag_id, photo_id))
 		else:
 			cursor.execute('''INSERT INTO Tag (name) VALUES (%s)''', (tag))
 
@@ -968,7 +968,7 @@ def check_friend():
 def get_top_tags(): 
 	conn = mysql.connect() 
 	cursor = conn.cursor()
-	cursor.execute("SELECT T.name, T.quantity FROM Tag T WHERE T.quantity > 0 ORDER BY T.quantity DESC")
+	cursor.execute("SELECT DISTINCT T.name, T.quantity FROM Tag T WHERE T.quantity > 0 ORDER BY T.quantity DESC")
 	return {"err": None, "tags": [{"name": t[0], "quantity": t[1]} for t in cursor.fetchall()]}
 
 if __name__ == "__main__":
